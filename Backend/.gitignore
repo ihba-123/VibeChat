@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Environment Variables
+.env
+
+# Django
+db.sqlite3
+/staticfiles/
+media/
+
+# Virtual Environment
+venv/
+env/
+
+# IDE / Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+Thumbs.db
