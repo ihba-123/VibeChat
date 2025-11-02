@@ -3,7 +3,7 @@ from .models import *
 # Register your models here.
 @admin.register(ChatRoom)
 class ChatRoomAdmin(admin.ModelAdmin):
-  list_display = ('name', 'is_group', 'created_at')
+  list_display = ('id','name', 'is_group', 'created_at')
   search_fields = ('name',)
 
 @admin.register(Message)

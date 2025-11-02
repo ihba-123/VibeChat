@@ -37,9 +37,29 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):
+    photo = serializers.SerializerMethodField()
+
     class Meta:
         model = Profile
-        fields = ['bio','photo']
+        fields = ['id','bio', 'photo']
+
+    def get_photo(self, obj):
+        import cloudinary
+        if obj.photo:
+            # Return the full Cloudinary URL
+            return (
+                obj.photo.url
+                if hasattr(obj.photo, 'url')
+                else cloudinary.utils.cloudinary_url(str(obj.photo))[0]
+            )
+        # Fallback default image (optional)
+        default_public_id = "Default_Image_plhgsj"
+        default_url = cloudinary.utils.cloudinary_url(
+            default_public_id,
+            resource_type="image",
+            secure=True
+        )[0]
+        return default_url
 
     
 

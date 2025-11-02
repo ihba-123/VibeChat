@@ -1,6 +1,15 @@
 from django.urls import path
-from .views import ChatRoomCreateView, FriendRequestView,MessageListView,  OnlineUsersView , UserDetailView, ProfileUpdateView, ProfileAPIView,FriendRequestUpdateView , AllUsersStatusView , AttachmentView,UserSearchView
-
+from .view.chatroom_views import ChatRoomCreateView
+from .view.friendrequest_views import FriendRequestView
+from .view.friend_update_views import FriendRequestUpdateView
+from .view.message_list_view import MessageListView
+from .view.attachment_views import AttachmentView
+from .view.online_user_views import OnlineUsersView
+from .view.user_detail_views import UserDetailView
+from .view.profile_update import ProfileUpdateView
+from .view.profile_views import ProfileAPIView
+from .view.user_status_view import AllUsersStatusView
+from .view.user_search_view import UserSearchView
 urlpatterns = [
     path('chatrooms/create/', ChatRoomCreateView.as_view(), name='chatroom-create'),
     path('message-list/<int:room_id>/', MessageListView.as_view(), name='message-list'),
@@ -12,5 +21,5 @@ urlpatterns = [
     path('chat-profile/<int:user_id>/', ProfileAPIView.as_view(), name='profile-detail'),  # any user's profile
     path('chat-profile/update/', ProfileUpdateView.as_view(), name='profile-update'),
     path('users/all-status/', AllUsersStatusView.as_view(), name='all-user-status'),  
-     path('user-search/', UserSearchView.as_view(), name='user-search'),
+    path('user-search/', UserSearchView.as_view(), name='user-search'),
 ]

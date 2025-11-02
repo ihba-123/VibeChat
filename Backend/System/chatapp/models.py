@@ -5,11 +5,20 @@ from cloudinary.models import CloudinaryField
 # Profile Model (Friends)
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
-    friends = models.ManyToManyField(User, blank=True, related_name="friends")
-    is_online = models.BooleanField(default=False)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile", db_index=True)
+    friends = models.ManyToManyField(User, blank=True, related_name="friends" ,db_index=True)
+    is_online = models.BooleanField(default=False,db_index=True)
     bio = models.TextField(blank=True, null=True)
     photo = CloudinaryField('image', blank=True, null=True)
+
+    class Meta:
+        indexes =[
+            models.Index(fields=['user']),
+            models.Index(fields=['is_online']),
+        ]
+        verbose_name = 'Profile'
+        verbose_name_plural= 'Profiles'
+
     def add_friend(self, friend_user):
         """Add a friend symmetrically."""
         if not self.friends.filter(pk=friend_user.pk).exists():
@@ -36,9 +45,9 @@ class FriendRequest(models.Model):
         ('rejected', 'Rejected'),
     )
 
-    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_friend_requests')
-    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_friend_requests')
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_friend_requests', db_index=True)
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_friend_requests', db_index=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending', db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -53,18 +62,25 @@ class FriendRequest(models.Model):
 
 class ChatRoom(models.Model):
     name = models.CharField(max_length=255, blank=True, null=True)
-    is_group = models.BooleanField(default=False)
+    is_group = models.BooleanField(default=False,db_index=True)
     participants = models.ManyToManyField(User, related_name="chat_rooms")
     admin = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="admin_rooms")
     group_image = models.ImageField(upload_to='group_images/', blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True,db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["is_group"]),
+            models.Index(fields=["created_at"]),
+        ]
+        verbose_name = "Chat Room"
+        verbose_name_plural = "Chat Rooms"
 
     @classmethod
     def get_private_chat(cls, user1, user2):
-        chat_rooms = cls.objects.filter(is_group=False, participants=user1).filter(participants=user2)
-        for chat in chat_rooms:
-            if chat.participants.count() == 2:
-                return chat
+        chat_rooms = cls.objects.filter(is_group=False, participants=user1).filter(participants=user2).prefetch_related('participants').first()
+        if chat_rooms:
+            return chat_rooms
         
         chat=cls.objects.create(is_group=False)
         chat.participants.add(user1, user2)
@@ -93,13 +109,22 @@ class ChatRoom(models.Model):
 # Message Model
 
 class Message(models.Model):
-    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages")
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages")
+    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages",db_index=True)
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages",db_index=True)
     content = models.TextField(blank=True)
     attachment = CloudinaryField('attachment', blank=True, null=True,resource_type='raw')
     images = CloudinaryField('image', blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    read_by = models.ManyToManyField(User, blank=True, related_name="read_messages")
+    read_by = models.ManyToManyField(User, blank=True, related_name="read_messages",db_index=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=["chat_room", "timestamp"]),
+            models.Index(fields=["sender"]),
+        ]
+        ordering = ["timestamp"]
+        verbose_name = "Message"
+        verbose_name_plural = "Messages"
 
     def __str__(self):
 
