@@ -1,6 +1,7 @@
 from django.db import models
 from authentication.models import User  
 from cloudinary.models import CloudinaryField
+from .utils.encryption import message_encrypt , message_decode
 
 # Profile Model (Friends)
 
@@ -125,6 +126,21 @@ class Message(models.Model):
         ordering = ["timestamp"]
         verbose_name = "Message"
         verbose_name_plural = "Messages"
+    
+    def save(self , *args, **kwargs):
+        if self.content:
+            self.content = message_encrypt(self.content)
+        super().save(*args, **kwargs)
+    
+    @property
+    def decrypted_content(self):
+        if self.content:
+            try:
+                return message_decode(self.content)
+            except:
+                return self.content
+            
+            return 
 
     def __str__(self):
 

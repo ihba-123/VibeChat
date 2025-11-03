@@ -15,7 +15,6 @@ class MessageListView(APIView):
 
     def get(self, request , room_id=None):
       try:
-        room_id = request.query_params.get('room_id')
         if not room_id:
             return Response({'detail': 'room_id query parameter is required.'}, status=status.HTTP_400_BAD_REQUEST)
         

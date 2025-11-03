@@ -90,11 +90,15 @@ class ChatUserSerializer(serializers.ModelSerializer):
     sender = serializers.SerializerMethodField()
     attachment = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
+    content = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
         fields = ['id', 'sender', 'content', 'attachment', 'timestamp', 'images']
         read_only_fields = ['id', 'timestamp']
+    # Decode the message
+    def get_content(self,obj):
+        return obj.decrypted_content
 
     def get_sender(self, obj):
         # Always return sender’s Profile
@@ -102,6 +106,7 @@ class ChatUserSerializer(serializers.ModelSerializer):
         if profile:
             return PersonlDetailsSerializer(profile).data
         return None
+    
 
     def get_attachment(self, obj):
         try:
@@ -126,6 +131,8 @@ class ChatUserSerializer(serializers.ModelSerializer):
             return None
         except Exception:
             return None
+    
+
 
 
 
