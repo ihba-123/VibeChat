@@ -117,6 +117,7 @@ class Message(models.Model):
     images = CloudinaryField('image', blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     read_by = models.ManyToManyField(User, blank=True, related_name="read_messages",db_index=True)
+    is_read = models.BooleanField(default=False,db_index=True)
     
     class Meta:
         indexes = [

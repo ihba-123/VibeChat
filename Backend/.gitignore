@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 
 # Environment Variables
-.env
+/env
 
 # Django
 db.sqlite3
