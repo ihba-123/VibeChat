@@ -47,8 +47,7 @@ def create_chat_room(user, participant_ids, name, is_group=False):
             "message": "Duplicate Ids not allowed"
         }
 
-        
-    
+
 
     # Create new room
     chat_room = ChatRoom.objects.create(
