@@ -23,7 +23,7 @@ class RefreshTokenView(APIView):
             return Response({'detail': data['error']}, status=status_code)
 
         # If new refresh token is present, set cookie
-        response = Response({'access': data['access']}, status=status_code)
+        response = Response({'refresh': data['refresh']}, status=status_code)
         if 'refresh' in data:
             set_refresh_cookie(response, data['refresh'])
 
