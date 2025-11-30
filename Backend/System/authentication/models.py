@@ -70,7 +70,7 @@ class PasswordResetOtp(models.Model):
     user = models.ForeignKey(User , on_delete=models.CASCADE)
     is_used = models.BooleanField(default=False)
     otp_hash = models.CharField(max_length=255)
-    is_created = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     attempts = models.IntegerField(default=0)
 
     OTP_VALIDITY_MINUTES = 10
@@ -92,13 +92,13 @@ class PasswordResetOtp(models.Model):
      
     @classmethod
     def create_otp_for_user( cls , user):
-        secret = pyotp.random.base32()
+        secret = pyotp.random_base32()
         totp = pyotp.TOTP(secret, interval=600)
-        otp = otp.now()
+        otp = totp.now()
 
         obj = cls.objects.create(
             user=user,
-            otp=secret                
+            otp_hash=secret                
         )
         return obj , otp
     def verify_otp(self, otp_input):
