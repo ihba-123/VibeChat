@@ -4,7 +4,7 @@ def user_status(user):
         import cloudinary
         # Get all profiles except yourself
         profiles = Profile.objects.exclude(user=user)
-        default_public_id = "Default_Image_plhgsj"
+        default_public_id = "Dprofile_hjkzpu"
         default_url = cloudinary.utils.cloudinary_url(
             default_public_id,
             resource_type="image",

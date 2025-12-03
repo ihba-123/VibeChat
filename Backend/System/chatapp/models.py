@@ -146,3 +146,24 @@ class Message(models.Model):
     def __str__(self):
 
         return f"Message from {self.sender.email} to {self.chat_room.name} at {self.timestamp}"
+
+
+
+# BlockedUser Model
+
+class BlockedUser(models.Model):
+    blocker = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blocking",db_index=True)
+    blocked = models.ForeignKey(User, on_delete=models.CASCADE, related_name="blocked_by",db_index=True)
+    blocked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('blocker', 'blocked')
+        indexes = [
+            models.Index(fields=['blocker']),
+            models.Index(fields=['blocked']),
+        ]
+        verbose_name = "Blocked User"
+        verbose_name_plural = "Blocked Users"
+
+    def __str__(self):
+        return f"{self.blocker.email} blocked {self.blocked.email}"

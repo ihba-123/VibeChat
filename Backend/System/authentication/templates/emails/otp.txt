@@ -1,0 +1,18 @@
+------------------------------------------------------
+          VibeChat Secure Password Reset
+------------------------------------------------------
+
+Hello,
+
+Your One-Time Password (OTP) is:
+
+                {{ otp }}
+
+This OTP is valid for 10 minutes only.
+Please do NOT share this code with anyone.
+
+If you did not request a password reset, you can safely ignore this email.
+
+Thank you,
+The VibeChat Team
+------------------------------------------------------

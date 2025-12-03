@@ -22,7 +22,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             return obj.photo.url
         logger.info("No photo set, returning default URL")
         image = cloudinary.utils.cloudinary_url(
-            "Default_Image_plhgsj"
+            "profile_hjkzpu"
         )[0]
         return image
         
@@ -53,7 +53,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
                 else cloudinary.utils.cloudinary_url(str(obj.photo))[0]
             )
         # Fallback default image (optional)
-        default_public_id = "Default_Image_plhgsj"
+        default_public_id = "profile_hjkzpu"
         default_url = cloudinary.utils.cloudinary_url(
             default_public_id,
             resource_type="image",
