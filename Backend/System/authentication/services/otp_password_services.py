@@ -15,15 +15,14 @@ def rate_limit_key(email: str, action: str) -> str:
     return f"rate_limit:{action}:{email.lower()}"
 
 def check_rate_limit(email: str, action: str, limit: int = 5, period_sec: int = 3600) -> bool:
-    """
-    Returns True if rate limit exceeded
-    """
     key = rate_limit_key(email, action)
     attempts = cache.get(key, 0)
     if attempts >= limit:
         return True
     cache.set(key, attempts + 1, period_sec)
     return False
+
+
 
 # ------------------------------
 # OTP services
@@ -42,6 +41,8 @@ def generate_and_send_otp(email: str):
     send_otp_email_task.delay(email=email, otp=otp, user_id=user.id)
     logger.info(f"OTP generated and queued for {email} (user_id={user.id})")
 
+
+
 def verify_otp(email: str, otp: str) -> bool:
     try:
         user = User.objects.get(email=email)
@@ -56,6 +57,8 @@ def verify_otp(email: str, otp: str) -> bool:
         return False
 
     return latest_otp.verify_otp(otp)
+
+
 
 def reset_password(email: str, otp: str, new_password: str) -> bool:
     try:
