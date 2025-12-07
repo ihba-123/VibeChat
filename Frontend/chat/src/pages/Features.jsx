@@ -36,7 +36,7 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-muted/30">
+    <section id="features" className="py-20  md:py-32 px-4 sm:px-6 lg:px-8 ">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -45,7 +45,7 @@ export default function Features() {
           viewport={{ once: true }}
           className="text-center mb-12 md:mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-poppins text-blue-300 font-bold  mb-4">
             Why vibechat?
           </h2>
           <p className="text-base sm:text-lg text-foreground/60 max-w-2xl mx-auto font-light px-4">
@@ -53,7 +53,7 @@ export default function Features() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1  sm:grid-cols-2  lg:grid-cols-3 gap-4 sm:gap-6">
           {features.map((feature, i) => (
             <motion.div
               key={feature.title}
@@ -62,15 +62,15 @@ export default function Features() {
               transition={{ duration: 0.8, delay: i * 0.1 }}
               viewport={{ once: true }}
               whileHover={{ y: -5 }}
-              className="p-6 bg-card rounded-2xl border border-border hover:border-primary/30 transition-all hover:shadow-lg"
+              className="p-6 bg-gradient-to-br from-slate-950 via-gray-900 to-slate-950 opacity-100 rounded-2xl border border-border hover:border-primary/30 transition-all hover:shadow-lg"
             >
               <motion.div
-                className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4"
+                className="w-12 h-12 bg-primary/10  rounded-lg flex items-center justify-center mb-4"
                 whileHover={{ scale: 1.1, rotate: 5 }}
               >
                 <feature.icon className="w-6 h-6 text-primary" />
               </motion.div>
-              <h3 className="text-lg font-poppins font-bold text-foreground mb-2">{feature.title}</h3>
+              <h3 className="text-lg font-poppins  text-blue-300 font-bold  mb-2">{feature.title}</h3>
               <p className="text-foreground/60 text-sm leading-relaxed font-light">{feature.description}</p>
             </motion.div>
           ))}

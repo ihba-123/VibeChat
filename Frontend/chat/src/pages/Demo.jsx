@@ -11,7 +11,7 @@ export default function Demo() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4">Sleek & Intuitive</h2>
+          <h2 className="text-4xl md:text-5xl font-poppins font-bold text-blue-300 mb-4">Sleek & Intuitive</h2>
           <p className="text-lg text-foreground/60 font-light">
             Experience a beautiful interface designed for modern communication
           </p>
@@ -40,7 +40,7 @@ export default function Demo() {
             <motion.div
               key={item}
               whileHover={{ scale: 1.05 }}
-              className="p-6 bg-muted/50 rounded-xl text-center cursor-pointer"
+              className="p-6 bg-gradient-to-br from-slate-900 via-gray-900 to-slate-950 opacity-100 rounded-xl text-center cursor-pointer"
             >
               <p className="text-lg font-poppins font-bold text-foreground">{item}</p>
               <p className="text-sm text-foreground/60 mt-2 font-light">

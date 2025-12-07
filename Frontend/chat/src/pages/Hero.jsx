@@ -3,53 +3,66 @@ import { ArrowRight, FileUp, Image } from "lucide-react"
 
 export default function Hero() {
   return (
-    <section  className="pt-32 pb-16 md:py-40 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+    <section  className="pt-32 pb-16 md:py-40 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto ">
       <div className="grid md:grid-cols-2 gap-12 items-center">
+       
+
+
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-        >
+          >
+          <div className="flex items-center justify-center md:inline-block">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="inline-block mb-4 px-4 py-2 bg-accent/10 rounded-full border border-accent/20"
+            className="inline-block mb-4  px-4 py-2 bg-accent/10 rounded-full border border-accent/20"
           >
             <span className="text-sm font-medium text-primary">✨ Welcome to vibechat</span>
           </motion.div>
+
+</div>
+
+<div className="flex items-center justify-center md:inline-block flex-col">
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-poppins font-bold text-foreground leading-tight mb-6"
-          >
-            Connect with <span className="text-primary">real vibes</span>
+            className="text-4xl text-center md:text-left  sm:text-5xl md:text-6xl font-poppins font-bold text-blue-300 leading-tight mb-6"
+            >
+            Connect with <span className="text-blue-500">real vibes</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-base sm:text-lg text-foreground/70 mb-8 leading-relaxed max-w-lg font-light"
+            className="text-center md:text-left sm:text-lg text-foreground/70 mb-8 leading-relaxed max-w-lg font-light"
           >
             Experience messaging like never before. Share files, folders, and moments instantly with end-to-end
             encryption.
           </motion.p>
+
+          </div>
+
+          <div className="sm:flex justify-center items-center md:justify-normal ">
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-3 sm:gap-4"
-          >
+            >
+            
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 sm:px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-shadow text-sm sm:text-base"
-            >
+              className="px-6 sm:px-8 py-3 md:px-5 md:text-center  bg-primary text-primary-foreground rounded-full font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-shadow text-sm sm:text-base"
+              >
               Get Started
               <ArrowRight className="w-4 h-4" />
             </motion.button>
@@ -57,17 +70,18 @@ export default function Hero() {
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               className="px-6 sm:px-8 py-3 border-2 border-primary text-primary rounded-full font-semibold hover:bg-primary/5 transition-colors text-sm sm:text-base"
-            >
+              >
               Watch Demo
             </motion.button>
           </motion.div>
-
+              </div>
+<div className="flex items-center  justify-center md:inline-block ">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-8 sm:mt-12 flex flex-col sm:flex-row gap-4 sm:gap-6"
-          >
+            className="mt-8 sm:mt-12 flex  sm:flex-row gap-4 sm:gap-6"
+            >
             <div className="flex items-center gap-2">
               <FileUp className="w-5 h-5 text-primary flex-shrink-0" />
               <span className="text-sm text-foreground/70">Share Files</span>
@@ -77,6 +91,7 @@ export default function Hero() {
               <span className="text-sm text-foreground/70">Share Photo</span>
             </div>
           </motion.div>
+            </div>
         </motion.div>
 
         <motion.div

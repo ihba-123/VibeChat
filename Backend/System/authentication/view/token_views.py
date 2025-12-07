@@ -15,15 +15,23 @@ class RefreshTokenView(APIView):
     @method_decorator(ensure_csrf_cookie)
     def post(self, request):
         refresh_token = request.COOKIES.get("refresh_token")
-        print("Refresh token:", str(refresh_token))
+
+        if not refresh_token:
+            return Response({'detail': 'Refresh token missing'}, status=401)
 
         data, status_code = refresh_access_token_service(refresh_token)
 
         if 'error' in data:
             return Response({'detail': data['error']}, status=status_code)
 
-        # If new refresh token is present, set cookie
-        response = Response({'refresh': data['refresh']}, status=status_code)
+        # Always send back new ACCESS TOKEN
+        response_data = {
+            'access': data['access']
+        }
+
+        response = Response(response_data, status=status_code)
+
+        # If refresh rotation is enabled → set new refresh cookie
         if 'refresh' in data:
             set_refresh_cookie(response, data['refresh'])
 
