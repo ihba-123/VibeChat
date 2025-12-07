@@ -13,10 +13,46 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-
-// Toastify
+import { Link, useNavigate } from "react-router-dom";
+import { useAuthStore } from "../../store/useAuthStore";
 import { toast } from "react-toastify";
+import { Navigate } from "react-router-dom";
+// Reusable TextField component
+const InputField = ({ label, type, value, onChange, show, toggleShow }) => (
+  <TextField
+    fullWidth
+    label={label}
+    type={show ? "text" : type}
+    value={value}
+    onChange={onChange}
+    required
+    sx={{
+      mb: 3,
+      "& .MuiOutlinedInput-root": {
+        color: "white",
+        borderRadius: 1,
+        "& fieldset": { borderColor: "gray" },
+        "&:hover fieldset": { borderColor: "#3b82f6" },
+        "&.Mui-focused fieldset": { borderColor: "#06b6d4", borderWidth: 2 },
+      },
+      "& .MuiInputLabel-root": { color: "gray" },
+      "& .MuiInputLabel-root.Mui-focused": { color: "#06b6d4" },
+    }}
+    InputProps={
+      toggleShow
+        ? {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={toggleShow}>
+                  {show ? <VisibilityOff sx={{ color: "gray" }} /> : <Visibility sx={{ color: "gray" }} />}
+                </IconButton>
+              </InputAdornment>
+            ),
+          }
+        : {}
+    }
+  />
+);
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -25,248 +61,122 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  const { register, clearError, isLoading } = useAuthStore();
+  const navigation = useNavigate();
+
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  clearError(); // Clear previous error
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match!", {
-        position: "top-right",
-      });
-      return;
-    }
+  if (password !== confirmPassword) {
+    toast.error("Passwords do not match!");
+    return;
+  }
+  
+  if(password.length < 6 && confirmPassword.length <6){ 
+    toast.error("Password must be at least 6 characters!");
+    return;
+  }
+  
+  if (!passwordRegex.test(password)) {
+    toast.error(
+      "Password must be at least 8 characters, include uppercase, lowercase, number, and special symbol"
+    );
+    return;
+  }
 
-    setLoading(true);
-
-    try {
-      await new Promise((r) => setTimeout(r, 1000));
-
-      // 🔥 Success toast
-      toast.success("Signup Successful!", {
-        position: "top-right",
-      });
-
-      console.log({ name, email, password });
-    } catch (err) {
-      toast.error("Something went wrong!", {
-        position: "top-right",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const userData = {
+    name,
+    email,
+    password,
+    password2: confirmPassword,
   };
 
-  const handleGoogleSignIn = () => {
-    toast.info("Google Sign-in coming soon!", {
-      position: "top-right",
-    });
-  };
+  try {
+    const result = await register(userData);
+    console.log("Registration result:", result);
+    if (result.success) {
+      setTimeout(() => {
+        navigation("/login");
+        clearError();
+      }, 1000);
+      toast.success("Signup Successful!");
+    } else {
+      
+      if (typeof result.error === "object") {
+        for (const [field, messages] of Object.entries(result.error)) {
+          messages.forEach((msg) => toast.error(`${field}: ${msg}`));
+        }
+      } else {
+        toast.error(result.error || "Registration failed!");
+      }
+    }
+  } catch (err) {
+    toast.error("Something went wrong! Please try again.");
+    console.error(err);
+  }
+};
+
 
   return (
     <Box className="flex items-center justify-center">
       <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }}>
-        <Card
-          sx={{
-            maxWidth: 420,
-            borderRadius: 4,
-            backdropFilter: "blur(5px)",
-            background: "transparent",
-            p: 3,
-          }}
-        >
+        <Card sx={{ maxWidth: 420, borderRadius: 4, backdropFilter: "blur(5px)", background: "transparent", p: 3 }}>
           <CardContent>
             <form onSubmit={handleSubmit}>
-              {/* Name */}
-              <TextField
-                fullWidth
-                label="Name"
-                type="text"
-                variant="outlined"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                sx={{
-                  mb: 3,
-                  "& .MuiOutlinedInput-root": {
-                    color: "white",
-                    borderRadius: 1,
-                    "& fieldset": { borderColor: "gray", borderWidth: 1 },
-                    "&:hover fieldset": { borderColor: "#3b82f6" },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#06b6d4",
-                      borderWidth: 2,
-                    },
-                  },
-                  "& .MuiInputLabel-root": { color: "gray" },
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#06b6d4" },
-                }}
-              />
-
-              {/* Email */}
-              <TextField
-                fullWidth
-                label="Email"
-                type="email"
-                variant="outlined"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                sx={{
-                  mb: 3,
-                  "& .MuiOutlinedInput-root": {
-                    color: "white",
-                    borderRadius: 1,
-                    "& fieldset": { borderColor: "gray", borderWidth: 1 },
-                    "&:hover fieldset": { borderColor: "#3b82f6" },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#06b6d4",
-                      borderWidth: 2,
-                    },
-                  },
-                  "& .MuiInputLabel-root": { color: "gray" },
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#06b6d4" },
-                }}
-              />
-
-              {/* Password */}
-              <TextField
-                fullWidth
+              <InputField label="Name" type="text" value={name} onChange={(e) => setName(e.target.value)} />
+              <InputField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <InputField
                 label="Password"
-                type={showPassword ? "text" : "password"}
-                variant="outlined"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                sx={{
-                  mb: 3,
-                  "& .MuiOutlinedInput-root": {
-                    color: "white",
-                    borderRadius: 1,
-                    "& fieldset": { borderColor: "gray", borderWidth: 1 },
-                    "&:hover fieldset": { borderColor: "#3b82f6" },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#06b6d4",
-                      borderWidth: 2,
-                    },
-                  },
-                  "& .MuiInputLabel-root": { color: "gray" },
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#06b6d4" },
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? (
-                          <VisibilityOff sx={{ color: "gray" }} />
-                        ) : (
-                          <Visibility sx={{ color: "gray" }} />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
+                show={showPassword}
+                toggleShow={() => setShowPassword((prev) => !prev)}
               />
-
-              {/* Confirm Password */}
-              <TextField
-                fullWidth
+              <InputField
                 label="Confirm Password"
-                type={showConfirmPassword ? "text" : "password"}
-                variant="outlined"
+                type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                sx={{
-                  mb: 3,
-                  "& .MuiOutlinedInput-root": {
-                    color: "white",
-                    borderRadius: 1,
-                    "& fieldset": { borderColor: "gray", borderWidth: 1 },
-                    "&:hover fieldset": { borderColor: "#3b82f6" },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#06b6d4",
-                      borderWidth: 2,
-                    },
-                  },
-                  "& .MuiInputLabel-root": { color: "gray" },
-                  "& .MuiInputLabel-root.Mui-focused": { color: "#06b6d4" },
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        {showConfirmPassword ? (
-                          <VisibilityOff sx={{ color: "gray" }} />
-                        ) : (
-                          <Visibility sx={{ color: "gray" }} />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
+                show={showConfirmPassword}
+                toggleShow={() => setShowConfirmPassword((prev) => !prev)}
               />
 
-              {/* Submit Button */}
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                 <Button
                   type="submit"
                   fullWidth
-                  disabled={loading}
+                  disabled={isLoading}
                   variant="contained"
-                  sx={{
-                    py: 1.4,
-                    fontWeight: "bold",
-                    background: "linear-gradient(to right, #3b82f6, #06b6d4)",
-                  }}
+                  sx={{ py: 1.4, fontWeight: "bold", background: "linear-gradient(to right, #3b82f6, #06b6d4)" }}
                 >
-                  {loading ? (
-                    <CircularProgress size={24} color="inherit" />
-                  ) : (
-                    "Sign Up"
-                  )}
+                  {isLoading ? <CircularProgress size={24} color="inherit" /> : "Sign Up"}
                 </Button>
               </motion.div>
             </form>
 
-            {/* OR Divider */}
-            <Divider
-              sx={{
-                my: 3,
-                "&::before, &::after": { borderColor: "gray" },
-              }}
-              variant="middle"
-            >
+            <Divider sx={{ my: 3, "&::before, &::after": { borderColor: "gray" } }} variant="middle">
               <Typography sx={{ color: "gray", fontSize: 14 }}>OR</Typography>
             </Divider>
 
-            {/* Google Button */}
             <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button
                 fullWidth
                 variant="outlined"
-                onClick={handleGoogleSignIn}
+                onClick={() => toast.info("Google Sign-In coming soon!")}
                 sx={{
                   py: 1.2,
                   borderColor: "rgba(255,255,255,0.2)",
                   color: "white",
-                  "&:hover": {
-                    borderColor: "white",
-                    background: "rgba(255,255,255,0.05)",
-                  },
+                  "&:hover": { borderColor: "white", background: "rgba(255,255,255,0.05)" },
                 }}
               >
                 <Box display="flex" gap={1} alignItems="center">
-                  <img
-                    src="https://www.svgrepo.com/show/475656/google-color.svg"
-                    width={22}
-                    height={22}
-                    alt=""
-                  />
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" width={22} height={22} alt="" />
                   Continue with Google
                 </Box>
               </Button>
@@ -274,10 +184,7 @@ export default function Signup() {
 
             <Typography sx={{ textAlign: "center", mt: 3, color: "gray" }}>
               Already have an account?{" "}
-              <Link
-                to={"/login"}
-                style={{ color: "white", fontWeight: "bold", cursor: "pointer" }}
-              >
+              <Link to="/login" style={{ color: "white", fontWeight: "bold" }}>
                 Sign in
               </Link>
             </Typography>
