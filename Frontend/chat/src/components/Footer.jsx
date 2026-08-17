@@ -1,8 +1,13 @@
 import { motion } from "framer-motion"
-import { Link } from "react-router-dom" 
 import { Github, Linkedin, Mail ,MessageCircleCode} from "lucide-react"
+import { useNavigate } from "react-router-dom"
+
+import { useAuth } from "../auth/AuthProvider"
 
 export default function Footer() {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+
   return (
     <>
       <section id="cta" className="py-16 md:py-20 lg:py-32 px-4 sm:px-6 lg:px-8">
@@ -35,9 +40,10 @@ export default function Footer() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
+            onClick={() => navigate(isAuthenticated ? "/app" : "/register")}
             className="px-6 sm:px-10 py-3 sm:py-4 bg-primary text-primary-foreground rounded-full font-poppins font-bold text-base sm:text-lg hover:shadow-lg transition-shadow"
           >
-            Start Now
+            {isAuthenticated ? "Open VibeChat" : "Start Now"}
           </motion.button>
         </motion.div>
       </section>
@@ -69,12 +75,12 @@ export default function Footer() {
               <ul className="space-y-2">
                 {["Features", "Security", "Pricing", "Roadmap"].map((link) => (
                   <li key={link}>
-                    <Link
+                    <a
                       href="#"
                       className="text-foreground/60 hover:text-primary text-xs sm:text-sm transition-colors font-light"
                     >
                       {link}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -86,12 +92,12 @@ export default function Footer() {
               <ul className="space-y-2">
                 {["About", "Blog", "Careers", "Contact"].map((link) => (
                   <li key={link}>
-                    <Link
+                    <a
                       href="#"
                       className="text-foreground/60 hover:text-primary text-xs sm:text-sm transition-colors font-light"
                     >
                       {link}
-                    </Link>
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -135,15 +141,15 @@ export default function Footer() {
           <div className="border-t border-border pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-foreground/60 font-light">
             <p className="text-center sm:text-left">© 2025 vibechat. All rights reserved.</p>
             <div className="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6">
-              <Link href="#" className="hover:text-primary transition-colors">
+              <a href="#" className="hover:text-primary transition-colors">
                 Privacy Policy
-              </Link>
-              <Link href="#" className="hover:text-primary transition-colors">
+              </a>
+              <a href="#" className="hover:text-primary transition-colors">
                 Terms of Service
-              </Link>
-              <Link href="#" className="hover:text-primary transition-colors">
+              </a>
+              <a href="#" className="hover:text-primary transition-colors">
                 Cookie Policy
-              </Link>
+              </a>
             </div>
           </div>
         </div>

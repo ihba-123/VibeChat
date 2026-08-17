@@ -1,45 +1,73 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status, permissions
-from ..services.chat_services import create_chat_room
 import logging
+
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .. import presence
+from ..pagination import StandardPagination
+from ..serializer import ConversationSerializer
+from ..services.chat_services import create_chat_room
+from ..services.conversation_services import (
+    attach_previews,
+    conversation_queryset,
+    total_unread,
+)
 
 logger = logging.getLogger(__name__)
 
+
 class ChatRoomCreateView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    """Open (or create) a conversation.
+
+    Idempotent by design: asking for a direct chat that already exists returns it
+    with 200 rather than a 400 the client cannot act on.
+    """
 
     def post(self, request):
-        is_group = request.data.get('is_group', False)
-        participant_ids = request.data.get('participant_ids', [])
-        name = request.data.get('name', None)
+        room, created = create_chat_room(
+            request.user,
+            request.data.get("participant_ids"),
+            request.data.get("name"),
+            bool(request.data.get("is_group", False)),
+        )
+        return Response(
+            {
+                "room_id": room.pk,
+                "is_group": room.is_group,
+                "created": created,
+                "detail": "Conversation created." if created else "Conversation already exists.",
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
-        print(f"Received is_group: {is_group}, participant_ids: {participant_ids}, name: {name}")
 
-        try:
-            result = create_chat_room(request.user, participant_ids, name, is_group)
-            print(f"Chat room result: {result}")
+class ConversationListView(APIView):
+    """The sidebar: rooms ordered by activity, with previews and unread counts."""
 
-            if not result["success"]:
-                return Response(
-                    {"message": result["message"]},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+    def get(self, request):
+        queryset = conversation_queryset(request.user)
 
-            room = result["room"]
+        paginator = StandardPagination()
+        page = paginator.paginate_queryset(queryset, request, view=self)
+        rooms = attach_previews(page, request.user)
 
-            return Response(
-                {
-                    "message": result["message"],
-                    "room_id": room.id,
-                    "is_group": is_group
-                },
-                status=status.HTTP_201_CREATED
-            )
+        participant_ids = {
+            participant.pk for room in rooms for participant in room.participants.all()
+        }
+        serializer = ConversationSerializer(
+            rooms,
+            many=True,
+            context={
+                "viewer": request.user,
+                "online_ids": presence.online_ids(participant_ids),
+            },
+        )
+        response = paginator.get_paginated_response(serializer.data)
+        response.data["total_unread"] = total_unread(request.user)
+        return response
 
-        except Exception as e:
-            logger.error(f"Error creating chat room: {str(e)}")
-            return Response(
-                {"detail": f"Error creating chat room: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+
+class UnreadCountView(APIView):
+    def get(self, request):
+        return Response({"total_unread": total_unread(request.user)})

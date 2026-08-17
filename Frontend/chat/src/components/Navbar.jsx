@@ -1,6 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { Moon, Sun, Menu, X, MessageCircleCode } from "lucide-react"
 import { useState, useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
+
+import { useAuth } from "../auth/AuthProvider"
+import { useTheme } from "../hooks/ui"
+import config from "../config"
 
 const navItems = [
   { label: "Features", href: "features" },
@@ -9,27 +14,17 @@ const navItems = [
 ]
 
 export default function Navbar() {
-  const [isDark, setIsDark] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  // Shared with the rest of the app so the choice persists across screens instead
+  // of each component keeping its own copy of the theme state.
+  const { isDark, toggle: toggleTheme } = useTheme()
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     setIsMounted(true)
-    const isDarkMode = document.documentElement.classList.contains("dark")
-    setIsDark(isDarkMode)
   }, [])
-
-  const toggleTheme = () => {
-    const newIsDark = !isDark
-    setIsDark(newIsDark)
-    if (newIsDark) {
-      document.documentElement.classList.add("dark")
-      localStorage.setItem("theme", "dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-      localStorage.setItem("theme", "light")
-    }
-  }
 
   const handleNavClick = () => setIsMenuOpen(false)
 
@@ -51,7 +46,7 @@ export default function Navbar() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 group">
+        <Link to="/" className="flex items-center gap-2 group">
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -60,9 +55,9 @@ export default function Navbar() {
             <MessageCircleCode />
           </motion.div>
           <span className="text-xl font-bold font-poppins text-foreground group-hover:text-primary transition-colors">
-            VibeChat
+            {config.appName}
           </span>
-        </a>
+        </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
@@ -107,22 +102,25 @@ export default function Navbar() {
             {isMenuOpen ? <X className="w-5 h-5 text-foreground" /> : <Menu className="w-5 h-5 text-foreground" />}
           </motion.button>
 
-          {/* Sign In button - hidden on mobile */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="hidden sm:block px-4 md:px-6 py-2 text-foreground hover:text-primary transition-colors font-medium text-sm md:text-base"
-          >
-            Sign In
-          </motion.button>
+          {/* A signed-in visitor only needs one action: get to the app. */}
+          {!isAuthenticated && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate("/login")}
+              className="hidden sm:block px-4 md:px-6 py-2 text-foreground hover:text-primary transition-colors font-medium text-sm md:text-base"
+            >
+              Sign In
+            </motion.button>
+          )}
 
-          {/* CTA button */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(isAuthenticated ? "/app" : "/register")}
             className="px-4 md:px-6 py-2 bg-primary text-primary-foreground rounded-full font-semibold hover:opacity-90 transition-opacity text-sm md:text-base"
           >
-            Try free
+            {isAuthenticated ? "Open app" : "Try free"}
           </motion.button>
         </div>
       </div>
@@ -150,15 +148,17 @@ export default function Navbar() {
                   {item.label}
                 </motion.button>
               ))}
-              {/* Mobile Sign In button */}
               <motion.button
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: navItems.length * 0.05 }}
                 className="w-full px-4 py-3 text-foreground hover:text-primary hover:bg-muted rounded-lg transition-all font-medium text-left"
-                onClick={handleNavClick}
+                onClick={() => {
+                  handleNavClick()
+                  navigate(isAuthenticated ? "/app" : "/login")
+                }}
               >
-                Sign In
+                {isAuthenticated ? "Open app" : "Sign In"}
               </motion.button>
             </div>
           </motion.div>

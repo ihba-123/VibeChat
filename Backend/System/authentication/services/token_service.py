@@ -1,50 +1,58 @@
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.conf import settings
-from authentication.models import User
 import logging
+
+from django.conf import settings
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.settings import api_settings as jwt_settings
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from authentication.models import User
 
 logger = logging.getLogger(__name__)
 
+
 def refresh_access_token_service(refresh_token):
+    """Exchange a refresh token for a fresh access token (rotating if configured).
+
+    Returns ``(data, status_code)``.
+    """
     if not refresh_token:
-        logger.warning("Refresh token not found")
-        return {'error': 'Refresh token not found in cookies'}, 400
+        return {'error': 'Refresh token not found in cookies.'}, 401
 
     try:
         token = RefreshToken(refresh_token)
-        user_id = token.payload.get('user_id')
+    except TokenError:
+        # Expired, malformed, or already blacklisted: the client must sign in again.
+        return {'error': 'Session expired. Please sign in again.'}, 401
 
-        if not user_id:
-            return {'error': 'Invalid token payload'}, 400
+    user_id = token.payload.get(jwt_settings.USER_ID_CLAIM)
+    if not user_id:
+        return {'error': 'Invalid token payload.'}, 401
 
-        user = User.objects.get(id=user_id)
-
-        # Create new access token
-        new_access = str(token.access_token)
-
-        # Rotate refresh token if enabled
-        if settings.SIMPLE_JWT.get('ROTATE_REFRESH_TOKENS', False):
-            new_refresh = RefreshToken.for_user(user)
-
-            # If blacklist app is active, blacklist the old token
-            if 'rest_framework_simplejwt.token_blacklist' in settings.INSTALLED_APPS:
-                try:
-                    token.blacklist()
-                except Exception as e:
-                    logger.error(f"Error blacklisting token: {str(e)}")
-                    return {'error': 'Error blacklisting token'}, 500
-
-            logger.info("Refresh token rotated successfully")
-            return {
-                'access': new_access,
-                'refresh': str(new_refresh)
-            }, 200
-
-        # If rotation is disabled, return only new access
-        return {'access': new_access}, 200
-
+    try:
+        user = User.objects.get(**{jwt_settings.USER_ID_FIELD: user_id}, is_active=True)
     except User.DoesNotExist:
-        return {'error': 'User not found'}, 404
-    except Exception as e:
-        logger.error(f"Error refreshing token: {str(e)}")
-        return {'error': 'Invalid refresh token'}, 400
+        return {'error': 'User not found.'}, 401
+
+    if not settings.SIMPLE_JWT.get('ROTATE_REFRESH_TOKENS', False):
+        return {'access': str(token.access_token), 'user': user}, 200
+
+    new_refresh = RefreshToken.for_user(user)
+
+    if settings.SIMPLE_JWT.get('BLACKLIST_AFTER_ROTATION', False):
+        try:
+            token.blacklist()
+        except AttributeError:
+            logger.warning('Token blacklist app is not installed; skipping rotation blacklist.')
+        except TokenError:
+            # Already blacklisted — a duplicate refresh (two tabs racing). The new
+            # pair above is still valid, so this is not a failure.
+            logger.info('Refresh token was already blacklisted during rotation.')
+
+    return {
+        # The access token is the whole point of this endpoint. The previous
+        # version built it and then returned only the refresh token, so the client
+        # could never actually renew its session.
+        'access': str(new_refresh.access_token),
+        'refresh': str(new_refresh),
+        'user': user,
+    }, 200

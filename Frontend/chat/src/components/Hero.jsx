@@ -1,7 +1,16 @@
 import { motion } from "framer-motion"
 import { ArrowRight, FileUp, Image } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+
+import { useAuth } from "../auth/AuthProvider"
 
 export default function Hero() {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+
+  const scrollToProduct = () =>
+    document.getElementById("product")?.scrollIntoView({ behavior: "smooth" })
+
   return (
     <section  className="pt-32 pb-16 md:py-40 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -48,17 +57,19 @@ export default function Hero() {
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
+              onClick={() => navigate(isAuthenticated ? "/app" : "/register")}
               className="px-6 sm:px-8 py-3 bg-primary text-primary-foreground rounded-full font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-shadow text-sm sm:text-base"
             >
-              Get Started
+              {isAuthenticated ? "Open VibeChat" : "Get Started"}
               <ArrowRight className="w-4 h-4" />
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
+              onClick={scrollToProduct}
               className="px-6 sm:px-8 py-3 border-2 border-primary text-primary rounded-full font-semibold hover:bg-primary/5 transition-colors text-sm sm:text-base"
             >
-              Watch Demo
+              See it in action
             </motion.button>
           </motion.div>
 

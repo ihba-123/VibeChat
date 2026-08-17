@@ -79,44 +79,52 @@ class PasswordResetOtp(models.Model):
     def __str__(self):
         return f"Password Reset OTP for {self.user.email}"
     
-    def save(self , *args, **kwargs):
-        # Generate and set the OTP hash and remove old OTPs
+    # TOTP steps are aligned to absolute time, so a code generated late in a step
+    # would otherwise be rejected only moments later. The validity window above is
+    # enforced by created_at; this just keeps the step boundary from cutting it short.
+    OTP_INTERVAL_SECONDS = 600
+    OTP_VALID_WINDOW = 1
+
+    def save(self, *args, **kwargs):
         if not self.pk:
-            PasswordResetOtp.objects.filter(
-                user = self.user,
-                is_used = False
-            ).exclude(created_at__gte=timezone.now()-timedelta(minutes=self.OTP_VALIDITY_MINUTES)).delete()
-        
+            # Retire the user's earlier codes so only the newest one can be used.
+            PasswordResetOtp.objects.filter(user=self.user, is_used=False).update(is_used=True)
         super().save(*args, **kwargs)
 
-     
     @classmethod
-    def create_otp_for_user( cls , user):
+    def create_otp_for_user(cls, user):
         secret = pyotp.random_base32()
-        totp = pyotp.TOTP(secret, interval=600)
+        totp = pyotp.TOTP(secret, interval=cls.OTP_INTERVAL_SECONDS)
         otp = totp.now()
 
-        obj = cls.objects.create(
-            user=user,
-            otp_hash=secret                
-        )
-        return obj , otp
-    def verify_otp(self, otp_input):
-        if self.is_used or self.attempts >= self.MAX_ATTEMPTS:
+        obj = cls.objects.create(user=user, otp_hash=secret)
+        return obj, otp
+
+    @property
+    def is_expired(self):
+        return (timezone.now() - self.created_at) > timedelta(minutes=self.OTP_VALIDITY_MINUTES)
+
+    def verify_otp(self, otp_input, consume=True):
+        """Check a submitted code.
+
+        ``consume=False`` lets the UI validate a code without spending it, so the
+        two-step "verify, then choose a new password" flow does not invalidate the
+        code before the reset request arrives.
+        """
+        if self.is_used or self.attempts >= self.MAX_ATTEMPTS or self.is_expired:
             return False
 
-        if (timezone.now() - self.created_at) > timedelta(minutes=self.OTP_VALIDITY_MINUTES):
-            return False
-
-        totp = pyotp.TOTP(self.otp_hash, interval=600)
-        if totp.verify(otp_input):
-            self.is_used = True
-            self.save()
+        totp = pyotp.TOTP(self.otp_hash, interval=self.OTP_INTERVAL_SECONDS)
+        if totp.verify(otp_input, valid_window=self.OTP_VALID_WINDOW):
+            if consume:
+                self.is_used = True
+                self.save(update_fields=['is_used'])
             return True
-        else:
-            self.attempts += 1
-            self.save()
-            return False
+
+        # Counted even on a peek, so repeated guessing is still capped.
+        self.attempts += 1
+        self.save(update_fields=['attempts'])
+        return False
 
     @classmethod
     def cleanup_expired(cls):

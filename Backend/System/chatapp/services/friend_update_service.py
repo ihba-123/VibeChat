@@ -1,37 +1,46 @@
-from ..models import FriendRequest
-from django.shortcuts import get_object_or_404
+from django.db import transaction
+from rest_framework.exceptions import ValidationError
+
+from .. import realtime
+from ..models import ChatRoom, FriendRequest, Profile
+
+VALID_ACTIONS = {"accept", "reject"}
 
 
 def friend_update_status(request_user, request_id, action):
-  print(f"DEBUG: Current user ID = {request_user.id}, request ID = {request_id}")
-  try:
-    friend_request = FriendRequest.objects.get(id=request_id, to_user=request_user)
-    print(f"Fetched friend request: {friend_request}")
-    if friend_request.status != 'pending':
-        raise ValueError("This friend request has already been responded to.")
+    if action not in VALID_ACTIONS:
+        raise ValidationError({"action": 'Use "accept" or "reject".'})
 
-    if action == 'accept':
-        friend_request.status = 'accepted'
-        friend_request.save()
+    with transaction.atomic():
+        # Locked for the duration so two clicks on Accept cannot both pass the
+        # pending check and add the friendship twice.
+        friend_request = (
+            FriendRequest.objects.select_for_update()
+            .select_related("from_user", "to_user")
+            .filter(id=request_id, to_user=request_user)
+            .first()
+        )
+        if friend_request is None:
+            raise ValidationError("Friend request not found.")
+        if friend_request.status != "pending":
+            raise ValidationError("This friend request has already been responded to.")
 
-        # Add both users as friends
-        to_profile = friend_request.to_user.profile
-        from_profile = friend_request.from_user.profile
+        friend_request.status = "accepted" if action == "accept" else "rejected"
+        friend_request.save(update_fields=["status"])
 
-        to_profile.friends.add(friend_request.from_user)
-        from_profile.friends.add(friend_request.to_user)
+        room = None
+        if action == "accept":
+            Profile.for_user(request_user).add_friend(friend_request.from_user)
+            # Give the pair a conversation immediately so the new friend shows up
+            # in both sidebars without an extra round trip.
+            room = ChatRoom.get_private_chat(request_user, friend_request.from_user)
 
-        to_profile.save()
-        from_profile.save()
-
-    elif action == 'reject':
-        friend_request.status = 'rejected'
-        friend_request.save()
-
-    else:
-        raise ValueError('Invalid action. Use "accept" or "reject".')
+    realtime.notify_friend_update(
+        friend_request.from_user_id, friend_request.pk, friend_request.status, request_user
+    )
+    if room is not None:
+        realtime.notify_conversation_created(
+            [request_user.pk, friend_request.from_user_id], room.pk
+        )
 
     return friend_request, friend_request.status
-  
-  except FriendRequest.DoesNotExist:
-    raise ValueError("Friend request not found.")

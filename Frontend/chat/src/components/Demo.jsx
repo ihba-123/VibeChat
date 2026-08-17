@@ -36,7 +36,7 @@ export default function Demo() {
           viewport={{ once: true }}
           className="mt-12 grid md:grid-cols-3 gap-6"
         >
-          {["Fast", "Secure", "Social"].map((item, i) => (
+          {["Fast", "Secure", "Social"].map((item) => (
             <motion.div
               key={item}
               whileHover={{ scale: 1.05 }}

@@ -1,37 +1,41 @@
-from ..models import Profile,FriendRequest
+from ..models import FriendRequest, Profile
+from . import blocking
 
+
+def discoverable_profiles(user, search=None):
+    """People the user could connect with.
+
+    Excludes existing friends, anyone with a pending request in either direction,
+    and blocked users. Returned as a queryset so the view can paginate it — with a
+    thousand accounts this endpoint previously serialised every one of them.
+    """
+    profile = Profile.for_user(user)
+
+    pending = set(
+        FriendRequest.objects.filter(status="pending")
+        .filter(from_user=user)
+        .values_list("to_user_id", flat=True)
+    )
+    pending.update(
+        FriendRequest.objects.filter(status="pending")
+        .filter(to_user=user)
+        .values_list("from_user_id", flat=True)
+    )
+
+    excluded = pending | blocking.blocked_ids_for(user) | {user.pk}
+    excluded.update(profile.friends.values_list("id", flat=True))
+
+    queryset = (
+        Profile.objects.select_related("user")
+        .filter(user__is_active=True)
+        .exclude(user_id__in=excluded)
+    )
+    if search:
+        queryset = queryset.filter(user__name__icontains=search)
+    # Online first, then alphabetically; id keeps paging deterministic.
+    return queryset.order_by("-is_online", "user__name", "user__id")
+
+
+# Backwards-compatible alias for the original import name.
 def onlineuser(user):
-  try:
-            # Ensure the current user has a profile
-            profile, _ = Profile.objects.get_or_create(user=user)
-
-            # Get all online users except current one
-            online_users = Profile.objects.filter(is_online=True).exclude(user=user)
-
-            # Exclude friends
-            online_users = online_users.exclude(user__in=profile.friends.all())
-
-            # Exclude pending friend requests
-            sent = FriendRequest.objects.filter(from_user=user, status='pending').values_list('to_user', flat=True)
-            received = FriendRequest.objects.filter(to_user=user, status='pending').values_list('from_user', flat=True)
-            excluded = list(sent) + list(received)
-            online_users = online_users.exclude(user__in=excluded)
-
-            data = [
-                {
-                    'id': p.user.id,
-                    'email': p.user.email,
-                    'username': p.user.name,
-                    'is_online': p.is_online
-                }
-                for p in online_users
-            ]
-
-            return data
-
-  except Exception as e:
-            print("DEBUG ERROR:", e)
-            return {
-                   "success":False,
-                   "message":"Error while fetching online users"
-            }
+    return discoverable_profiles(user).filter(is_online=True)

@@ -1,7 +1,11 @@
-from django.db import models
-from authentication.models import User  
-from cloudinary.models import CloudinaryField
-from .utils.encryption import message_encrypt , message_decode
+from django.db import models, transaction
+from django.db.models import Q
+
+from authentication.models import User
+
+from .storage import image_storage, raw_storage
+from .utils.encryption import is_encrypted, message_decode, message_encrypt
+
 
 # Profile Model (Friends)
 
@@ -10,7 +14,9 @@ class Profile(models.Model):
     friends = models.ManyToManyField(User, blank=True, related_name="friends" ,db_index=True)
     is_online = models.BooleanField(default=False,db_index=True)
     bio = models.TextField(blank=True, null=True)
-    photo = CloudinaryField('image', blank=True, null=True)
+    photo = models.ImageField(
+        upload_to='avatars/', storage=image_storage, blank=True, null=True
+    )
 
     class Meta:
         indexes =[
@@ -20,17 +26,23 @@ class Profile(models.Model):
         verbose_name = 'Profile'
         verbose_name_plural= 'Profiles'
 
+    @staticmethod
+    def for_user(user):
+        """Profile for ``user``, creating it if a signal was missed."""
+        profile, _ = Profile.objects.get_or_create(user=user)
+        return profile
+
     def add_friend(self, friend_user):
         """Add a friend symmetrically."""
-        if not self.friends.filter(pk=friend_user.pk).exists():
-            self.friends.add(friend_user)
-            friend_user.profile.friends.add(self.user)
+        other = Profile.for_user(friend_user)
+        self.friends.add(friend_user)
+        other.friends.add(self.user)
 
     def remove_friend(self, friend_user):
         """Remove a friend symmetrically."""
-        if self.friends.filter(pk=friend_user.pk).exists():
-            self.friends.remove(friend_user)
-            friend_user.profile.friends.remove(self.user)
+        other = Profile.for_user(friend_user)
+        self.friends.remove(friend_user)
+        other.friends.remove(self.user)
 
     def __str__(self):
         return f"Profile for user {self.user.email}"
@@ -78,25 +90,60 @@ class ChatRoom(models.Model):
         verbose_name_plural = "Chat Rooms"
 
     @classmethod
-    def get_private_chat(cls, user1, user2):
-        chat_rooms = cls.objects.filter(is_group=False, participants=user1).filter(participants=user2).prefetch_related('participants').first()
-        if chat_rooms:
-            return chat_rooms
-        
-        chat=cls.objects.create(is_group=False)
-        chat.participants.add(user1, user2)
-        return chat
+    def find_private_chat(cls, user1, user2):
+        """The 1:1 room shared by both users, or None. Never writes."""
+        if user1.pk == user2.pk:
+            return None
 
+        candidates = (
+            cls.objects.filter(is_group=False, participants=user1)
+            .filter(participants=user2)
+            .order_by("id")
+            .prefetch_related("participants")
+        )
+
+        # The membership check is done in Python rather than with an annotated
+        # Count: chaining two filters on `participants` and then aggregating over
+        # the same relation makes Django reuse one of the constrained joins, so the
+        # count comes back as 1 and never matches. The candidate set here is
+        # normally a single row, so the prefetch is cheap.
+        wanted = {user1.pk, user2.pk}
+        for room in candidates:
+            if {p.pk for p in room.participants.all()} == wanted:
+                return room
+        return None
+
+    @classmethod
+    def get_private_chat(cls, user1, user2):
+        """Get or create the 1:1 room for two users."""
+        existing = cls.find_private_chat(user1, user2)
+        if existing:
+            return existing
+
+        with transaction.atomic():
+            # Re-check inside the transaction so two concurrent openers of the same
+            # conversation cannot each create a room.
+            existing = cls.find_private_chat(user1, user2)
+            if existing:
+                return existing
+            chat = cls.objects.create(is_group=False)
+            chat.participants.add(user1, user2)
+        return chat
 
     def add_participant(self, user):
         """Add a user to the chat room."""
-        if not self.participants.filter(pk=user.pk).exists():
-            self.participants.add(user)
+        self.participants.add(user)
 
     def remove_participant(self, user):
         """Remove a user from the chat room."""
-        if self.participants.filter(pk=user.pk).exists():
-            self.participants.remove(user)
+        self.participants.remove(user)
+
+    def display_name_for(self, user):
+        """Group name, or the other member's name for a private room."""
+        if self.is_group:
+            return self.name or f"Group Chat ({self.pk})"
+        other = next((p for p in self.participants.all() if p.pk != user.pk), None)
+        return other.name or other.email if other else "Empty conversation"
 
     def __str__(self):
         if self.is_group:
@@ -109,16 +156,31 @@ class ChatRoom(models.Model):
 
 # Message Model
 
+class MessageQuerySet(models.QuerySet):
+    def with_sender(self):
+        """Avoid the per-message sender/profile lookups the serializer would do."""
+        return self.select_related("sender", "sender__profile")
+
+    def unread_for(self, user):
+        return self.exclude(sender=user).exclude(read_by=user)
+
+
 class Message(models.Model):
     chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="messages",db_index=True)
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sent_messages",db_index=True)
     content = models.TextField(blank=True)
-    attachment = CloudinaryField('attachment', blank=True, null=True,resource_type='raw')
-    images = CloudinaryField('image', blank=True, null=True)
+    attachment = models.FileField(
+        upload_to='attachments/', storage=raw_storage, blank=True, null=True
+    )
+    images = models.ImageField(
+        upload_to='images/', storage=image_storage, blank=True, null=True
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
     read_by = models.ManyToManyField(User, blank=True, related_name="read_messages",db_index=True)
     is_read = models.BooleanField(default=False,db_index=True)
-    
+
+    objects = MessageQuerySet.as_manager()
+
     class Meta:
         indexes = [
             models.Index(fields=["chat_room", "timestamp"]),
@@ -127,21 +189,24 @@ class Message(models.Model):
         ordering = ["timestamp"]
         verbose_name = "Message"
         verbose_name_plural = "Messages"
-    
+
     def save(self , *args, **kwargs):
-        if self.content:
+        # Encrypt on the way in, but only once: this used to re-encrypt on every
+        # save, so any second save (marking a message read, an admin edit) buried
+        # the plaintext under a second layer and broke decryption.
+        if self.content and not is_encrypted(self.content):
             self.content = message_encrypt(self.content)
         super().save(*args, **kwargs)
-    
+
     @property
     def decrypted_content(self):
-        if self.content:
-            try:
-                return message_decode(self.content)
-            except:
-                return self.content
-            
-            return 
+        if not self.content:
+            return ""
+        try:
+            return message_decode(self.content)
+        except Exception:
+            # Rows written before encryption existed are stored as plaintext.
+            return self.content
 
     def __str__(self):
 
@@ -164,6 +229,18 @@ class BlockedUser(models.Model):
         ]
         verbose_name = "Blocked User"
         verbose_name_plural = "Blocked Users"
+
+    @staticmethod
+    def blocked_ids_for(user):
+        """Every user id ``user`` cannot talk to, in either direction — one query."""
+        rows = BlockedUser.objects.filter(
+            Q(blocker=user) | Q(blocked=user)
+        ).values_list("blocker_id", "blocked_id")
+        return {
+            other for blocker_id, blocked_id in rows
+            for other in (blocker_id, blocked_id)
+            if other != user.pk
+        }
 
     def __str__(self):
         return f"{self.blocker.email} blocked {self.blocked.email}"
