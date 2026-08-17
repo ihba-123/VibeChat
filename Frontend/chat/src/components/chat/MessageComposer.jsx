@@ -31,7 +31,7 @@ function PendingAttachment({ pending, progress, onClear, isUploading }) {
           />
         ) : (
           <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-background">
-            <Paperclip className="h-7 w-7 text-muted-foreground" aria-hidden />
+            <Paperclip className="icon-xl text-muted-foreground" aria-hidden />
           </span>
         )}
 
@@ -42,12 +42,12 @@ function PendingAttachment({ pending, progress, onClear, isUploading }) {
           aria-label={removeLabel}
           title={removeLabel}
           className={cn(
-            'absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full',
+            'absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full',
             'border-2 border-card bg-foreground text-background shadow-md',
             'transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           )}
         >
-          <X className="h-4 w-4" strokeWidth={3} />
+          <X className="icon-xs" strokeWidth={2.5} />
         </button>
       </div>
 
@@ -76,7 +76,7 @@ function PendingAttachment({ pending, progress, onClear, isUploading }) {
       <div className="flex shrink-0 items-center gap-1">
         {isUploading && <Spinner label="Uploading" />}
         <IconButton label={removeLabel} onClick={onClear}>
-          <X className="h-6 w-6" />
+          <X className="icon-lg" />
         </IconButton>
       </div>
     </div>
@@ -87,6 +87,8 @@ export default function MessageComposer({
   roomId,
   disabled = false,
   disabledReason,
+  /** Optional control rendered beside the reason, e.g. an Unblock button. */
+  disabledAction,
   onSendText,
   onUpload,
   onTyping,
@@ -244,9 +246,17 @@ export default function MessageComposer({
   }
 
   if (disabled) {
+    // Takes the composer's place, so the explanation and the way to undo it sit
+    // exactly where the user is already looking. `disabledAction` is a slot rather
+    // than a blocking-aware button, which keeps this component presentational.
     return (
-      <div className="shrink-0 border-t border-border bg-card px-4 py-4 text-center text-sm text-muted-foreground">
-        {disabledReason || 'You cannot send messages in this conversation.'}
+      <div className="glass relative z-10 shrink-0 border-t px-4 py-3.5">
+        <div className="mx-auto flex max-w-xl flex-col items-center gap-2.5 sm:flex-row sm:justify-center sm:gap-4">
+          <p className="text-center text-sm text-muted-foreground sm:text-left">
+            {disabledReason || 'You cannot send messages in this conversation.'}
+          </p>
+          {disabledAction}
+        </div>
       </div>
     )
   }
@@ -258,7 +268,7 @@ export default function MessageComposer({
       onSubmit={submit}
       // shrink-0 keeps the composer at its natural height when the message
       // list grows; without it a flex parent can compress it.
-      className="shrink-0 border-t border-border bg-card px-3 py-3 sm:px-4"
+      className="glass relative z-10 shrink-0 border-t px-3 py-3 sm:px-4"
     >
       {pending && (
         <PendingAttachment
@@ -269,7 +279,7 @@ export default function MessageComposer({
         />
       )}
 
-      <div className="flex items-end gap-2">
+      <div className="flex min-w-0 items-end gap-2">
         <input
           ref={imageInputRef}
           type="file"
@@ -292,19 +302,17 @@ export default function MessageComposer({
 
         <IconButton
           label="Attach an image"
-          size="lg"
           onClick={() => imageInputRef.current?.click()}
           disabled={isUploading}
         >
-          <ImagePlus className="h-7 w-7" />
+          <ImagePlus className="icon-lg" />
         </IconButton>
         <IconButton
           label="Attach a file"
-          size="lg"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
         >
-          <Paperclip className="h-7 w-7" />
+          <Paperclip className="icon-lg" />
         </IconButton>
 
         <label className="sr-only" htmlFor="composer-input">
@@ -326,20 +334,20 @@ export default function MessageComposer({
           maxLength={config.maxMessageLength}
           className={cn(
             // min-h matches the 48px buttons either side so the row aligns.
-            'max-h-40 min-h-12 flex-1 resize-none rounded-2xl border border-input bg-background px-4 py-3 text-sm',
-            'placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring',
+            'max-h-40 min-h-10 min-w-0 flex-1 resize-none rounded-2xl border border-input bg-field px-4 py-3 text-sm',
+            'placeholder:text-subtle-foreground transition-colors hover:bg-field-hover',
+            'focus:border-transparent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-ring',
           )}
         />
 
         <IconButton
           label="Send message"
           type="submit"
-          size="lg"
           variant={canSend ? 'primary' : 'ghost'}
           disabled={!canSend}
           className="shrink-0"
         >
-          <SendHorizontal className="h-7 w-7" />
+          <SendHorizontal className="icon-lg" />
         </IconButton>
       </div>
     </form>

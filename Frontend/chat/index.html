@@ -4,7 +4,55 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0a0a" />
     <title>chat</title>
+
+    <!--
+      Ground painted before the stylesheet arrives, so the browser never shows its
+      own white canvas during the first request. `color-scheme` keeps the scrollbar
+      and form controls from rendering light against it.
+    -->
+    <style>
+      html {
+        background-color: oklch(0.11 0 0);
+        color-scheme: dark;
+      }
+    </style>
+
+    <!--
+      Decide the theme before the first paint.
+
+      The style block above only covers the gap before the stylesheet loads. Once
+      index.css arrives, `body { background: var(--background) }` resolves against
+      whichever palette is active — and with no class on <html> that is the light
+      one. So a refresh painted dark, then white the moment the CSS landed, then
+      dark again when React mounted and applied the theme. Three grounds, two of
+      them wrong.
+
+      Running here, synchronously in <head>, means the class is on the element
+      before the stylesheet can paint anything, so there is exactly one ground.
+
+      The rule mirrors the app: every public screen is dark, and inside the app the
+      user's stored choice wins. Values are read straight from localStorage rather
+      than imported, because this has to run before any module is evaluated — the
+      two keys are 'vibechat.session' (api/client.js) and 'theme' (hooks/ui.js).
+    -->
+    <script>
+      (function () {
+        var root = document.documentElement
+        var dark = true
+        try {
+          var signedIn = window.localStorage.getItem('vibechat.session') === '1'
+          var stored = window.localStorage.getItem('theme')
+          dark = !signedIn || stored !== 'light'
+        } catch (error) {
+          /* storage blocked (private mode): fall back to the public ground */
+        }
+        root.classList.toggle('dark', dark)
+        root.style.colorScheme = dark ? 'dark' : 'light'
+        root.style.backgroundColor = dark ? 'oklch(0.11 0 0)' : 'oklch(0.98 0 0)'
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

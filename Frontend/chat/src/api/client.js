@@ -58,6 +58,17 @@ const writeHint = (value) => {
 /** False only when we positively know there is no session. */
 export const mightHaveSession = () => readHint() !== '0'
 
+/**
+ * True only when a session was positively established in this browser before.
+ *
+ * The stricter counterpart to `mightHaveSession()`: that one treats an unknown
+ * marker as "maybe" so the bootstrap probe still runs, which is right for deciding
+ * whether to ask the server. This one treats unknown as "no", which is right for
+ * deciding whether a public page should hold its first paint — a first-time
+ * visitor must never wait on a probe that is almost certainly going to 401.
+ */
+export const hadSession = () => readHint() === '1'
+
 /** Record that there is definitively no session, so later loads skip the probe. */
 export const markNoSession = () => writeHint('0')
 
@@ -75,7 +86,10 @@ export const onAuthLost = (listener) => {
 
 const emitAuthLost = () => {
   accessToken = null
-  markNoSession()
+  // Deliberately does NOT write the no-session marker. Clearing it here meant a
+  // single transient refresh failure was remembered forever: every later page load
+  // skipped the probe and dropped the user on the login screen while the browser
+  // still held a perfectly usable refresh cookie.
   authLostListeners.forEach((listener) => {
     try {
       listener()
@@ -195,16 +209,20 @@ export const refreshAccessToken = () => {
   if (!refreshPromise) {
     refreshPromise = postRefresh()
       .catch(async (error) => {
-        // Only retry when a session was expected; a genuinely anonymous visitor
-        // must not pay for a second round trip.
-        if (error?.response?.status !== 401 || readHint() !== '1') throw error
+        // Retry unless we positively know there is no session. Gating on '1' meant a
+        // browser with an unknown marker got no retry, and so lost the rotation race
+        // it was designed to absorb.
+        if (error?.response?.status !== 401 || readHint() === '0') throw error
         await delay(500)
         return postRefresh()
       })
       .catch((error) => {
-        // A 401 is proof there is no usable cookie, so record it and stop probing
-        // on future loads.
-        if (error?.response?.status === 401) markNoSession()
+        // Only a definitive answer is remembered. The server distinguishes
+        // 'no_session' (the browser sent no refresh cookie) from 'session_expired'
+        // (a cookie was present but unusable — which also covers a tab that lost a
+        // token-rotation race). Recording the latter as "signed out" is what stranded
+        // users on the login page without them ever logging out.
+        if (error?.response?.data?.code === 'no_session') markNoSession()
         throw error
       })
       .finally(() => {

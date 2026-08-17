@@ -33,7 +33,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl font-poppins font-bold text-foreground leading-tight mb-6"
+            className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-tight mb-6"
           >
             Connect with <span className="text-primary">real vibes</span>
           </motion.h1>
@@ -42,7 +42,7 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-base sm:text-lg text-foreground/70 mb-8 leading-relaxed max-w-lg font-light"
+            className="text-base sm:text-lg text-foreground/70 mb-8 leading-relaxed max-w-lg font-normal"
           >
             Experience messaging like never before. Share files, folders, and moments instantly with end-to-end
             encryption.

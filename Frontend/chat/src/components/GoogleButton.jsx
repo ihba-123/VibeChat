@@ -4,7 +4,7 @@ import { Button } from './ui'
 /** Google's mark, inlined so the button needs no external asset. */
 function GoogleMark() {
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden focusable="false">
+    <svg viewBox="0 0 24 24" className="icon-sm" aria-hidden focusable="false">
       <path
         fill="#4285F4"
         d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82Z"

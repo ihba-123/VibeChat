@@ -36,7 +36,7 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-muted/30">
+    <section id="features" className="scroll-mt-24 py-20 md:py-32 px-4 sm:px-6 lg:px-8 bg-muted/30">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -45,10 +45,10 @@ export default function Features() {
           viewport={{ once: true }}
           className="text-center mb-12 md:mb-16"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
             Why vibechat?
           </h2>
-          <p className="text-base sm:text-lg text-foreground/60 max-w-2xl mx-auto font-light px-4">
+          <p className="text-base sm:text-lg text-foreground/60 max-w-2xl mx-auto font-normal px-4">
             Everything you need for meaningful conversations and seamless collaboration
           </p>
         </motion.div>
@@ -70,8 +70,8 @@ export default function Features() {
               >
                 <feature.icon className="w-6 h-6 text-primary" />
               </motion.div>
-              <h3 className="text-lg font-poppins font-bold text-foreground mb-2">{feature.title}</h3>
-              <p className="text-foreground/60 text-sm leading-relaxed font-light">{feature.description}</p>
+              <h3 className="text-lg font-bold text-foreground mb-2">{feature.title}</h3>
+              <p className="text-foreground/60 text-sm leading-relaxed font-normal">{feature.description}</p>
             </motion.div>
           ))}
         </div>

@@ -1,12 +1,14 @@
+import { ShieldOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 
 import ChatHeader from '../components/chat/ChatHeader'
+import { useConfirm } from '../components/ConfirmDialog'
 import ImageLightbox from '../components/chat/ImageLightbox'
 import MessageComposer from '../components/chat/MessageComposer'
 import MessageList from '../components/chat/MessageList'
 import { useToast } from '../components/Toaster'
-import { ErrorState } from '../components/ui'
+import { Button, ErrorState } from '../components/ui'
 import { useAuth } from '../auth/AuthProvider'
 import {
   useConversation,
@@ -29,6 +31,7 @@ export default function ChatRoom() {
   const navigate = useNavigate()
   const { onViewProfile } = useOutletContext() ?? {}
   const toast = useToast()
+  const confirm = useConfirm()
 
   const { data: me } = useMe()
   const { user } = useAuth()
@@ -88,8 +91,28 @@ export default function ChatRoom() {
     [roomId, sendTyping],
   )
 
+  /**
+   * Runs an action, optionally behind a confirmation prompt.
+   *
+   * The prompt is a parameter of the same helper rather than a separate wrapper so
+   * that a new destructive action added here cannot accidentally skip it — the
+   * only way to run something is through `act`, and the guard sits in one place.
+   */
+  const discardMessage = useCallback(
+    async (message) => {
+      const ok = await confirm({
+        title: 'Discard this message?',
+        description: 'It was never delivered, and the text will be lost.',
+        confirmLabel: 'Discard',
+      })
+      if (ok) discard(message)
+    },
+    [confirm, discard],
+  )
+
   const act = useCallback(
-    async (action, successMessage) => {
+    async (action, successMessage, confirmOptions) => {
+      if (confirmOptions && !(await confirm(confirmOptions))) return
       try {
         await action()
         if (successMessage) toast.success(successMessage)
@@ -97,7 +120,7 @@ export default function ChatRoom() {
         toast.error(error?.message || 'That did not work.')
       }
     },
-    [toast],
+    [confirm, toast],
   )
 
   if (messagesQuery.isError) {
@@ -122,15 +145,31 @@ export default function ChatRoom() {
         onBack={() => navigate('/app')}
         onViewProfile={() => otherUserId && onViewProfile?.(otherUserId)}
         onBlock={() =>
-          act(() => blockUser.mutateAsync(otherUserId), `${conversation?.title} blocked.`)
+          act(() => blockUser.mutateAsync(otherUserId), `${conversation?.title} blocked.`, {
+            title: `Block ${conversation?.title || 'this person'}?`,
+            description:
+              'They will not be able to message you, and this conversation becomes read-only. You can unblock them later from Settings.',
+            confirmLabel: 'Block',
+          })
         }
         onUnblock={() =>
-          act(() => unblockUser.mutateAsync(otherUserId), `${conversation?.title} unblocked.`)
+          act(() => unblockUser.mutateAsync(otherUserId), `${conversation?.title} unblocked.`, {
+            title: `Unblock ${conversation?.title || 'this person'}?`,
+            description: 'They will be able to message you again.',
+            confirmLabel: 'Unblock',
+            tone: 'default',
+          })
         }
         onRemoveFriend={() =>
           act(
             () => removeFriend.mutateAsync(otherUserId),
             `${conversation?.title} removed from friends.`,
+            {
+              title: `Remove ${conversation?.title || 'this person'}?`,
+              description:
+                'They will be removed from your friends list. You will need to send a new request to connect again.',
+              confirmLabel: 'Remove',
+            },
           )
         }
       />
@@ -150,7 +189,7 @@ export default function ChatRoom() {
         isLoadingOlder={messagesQuery.isLoadingOlder}
         onVisible={markVisible}
         onRetry={retry}
-        onDiscard={discard}
+        onDiscard={discardMessage}
         onOpenImage={setLightboxSrc}
         typingNames={typingNames}
       />
@@ -158,7 +197,27 @@ export default function ChatRoom() {
       <MessageComposer
         roomId={roomId}
         disabled={isBlocked}
-        disabledReason="You have blocked this person. Unblock them to start messaging again."
+        disabledReason={
+          conversation?.title
+            ? `You blocked ${conversation.title}. Unblock to message again.`
+            : 'You blocked this person. Unblock to message again.'
+        }
+        disabledAction={
+          <Button
+            size="sm"
+            className="shrink-0"
+            loading={unblockUser.isPending}
+            onClick={() =>
+              act(
+                () => unblockUser.mutateAsync(otherUserId),
+                `${conversation?.title || 'This person'} unblocked.`,
+              )
+            }
+          >
+            <ShieldOff className="icon-sm" />
+            Unblock
+          </Button>
+        }
         onSendText={send}
         onUpload={handleUpload}
         onTyping={handleTyping}

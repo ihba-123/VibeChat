@@ -37,7 +37,7 @@ export default function SocialCallback() {
       subtitle="The Google session could not be exchanged for an app session."
     >
       <div className="space-y-4">
-        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-600 dark:text-red-400">
+        <p className="rounded-lg border border-danger-border bg-danger-soft px-3 py-2.5 text-sm text-danger">
           {error}
         </p>
         <Button fullWidth onClick={() => navigate('/login', { replace: true })}>

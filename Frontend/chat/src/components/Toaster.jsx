@@ -11,9 +11,9 @@ const ToastContext = createContext(null)
 const DEFAULT_DURATION = 4500
 
 const VARIANTS = {
-  success: { Icon: CheckCircle2, accent: 'text-emerald-500', ring: 'ring-emerald-500/20' },
-  error: { Icon: XCircle, accent: 'text-red-500', ring: 'ring-red-500/20' },
-  warning: { Icon: AlertTriangle, accent: 'text-amber-500', ring: 'ring-amber-500/20' },
+  success: { Icon: CheckCircle2, accent: 'text-success', ring: 'ring-success-border' },
+  error: { Icon: XCircle, accent: 'text-danger', ring: 'ring-danger-border' },
+  warning: { Icon: AlertTriangle, accent: 'text-warning', ring: 'ring-warning-border' },
   info: { Icon: Info, accent: 'text-primary', ring: 'ring-primary/20' },
 }
 
@@ -89,11 +89,11 @@ function ToastViewport({ toasts, onDismiss }) {
               exit={{ opacity: 0, y: 8, scale: 0.97 }}
               transition={{ duration: 0.18, ease: 'easeOut' }}
               className={cn(
-                'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border border-border bg-card p-3 shadow-lg ring-1',
+                'glass-strong pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl border p-3 shadow-lg ring-1',
                 ring,
               )}
             >
-              <Icon className={cn('mt-0.5 h-6 w-6 shrink-0', accent)} aria-hidden />
+              <Icon className={cn('mt-0.5 icon-sm shrink-0', accent)} aria-hidden />
               <div className="min-w-0 flex-1">
                 {toast.title && (
                   <p className="text-sm font-semibold text-card-foreground">{toast.title}</p>
@@ -118,7 +118,7 @@ function ToastViewport({ toasts, onDismiss }) {
                 aria-label="Dismiss notification"
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
-                <X className="h-5 w-5" />
+                <X className="icon-md" />
               </button>
             </motion.div>
           )

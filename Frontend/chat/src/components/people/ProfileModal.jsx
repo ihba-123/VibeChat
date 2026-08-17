@@ -1,5 +1,5 @@
 import { Ban, MessageSquare, ShieldOff, UserMinus, UserPlus } from 'lucide-react'
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 
 import { useOpenDirectChat } from '../../hooks/useChat'
 import {
@@ -9,8 +9,10 @@ import {
   useSendFriendRequest,
   useUnblockUser,
 } from '../../hooks/useSocial'
+import { rememberPerson } from '../../lib/people'
 import { pluralize } from '../../lib/utils'
 import { useRealtime } from '../../realtime/RealtimeProvider'
+import { useConfirm } from '../ConfirmDialog'
 import { useToast } from '../Toaster'
 import { Avatar, Button, ErrorState, PresenceDot, Skeleton } from '../ui'
 import { Modal } from '../ui'
@@ -26,9 +28,11 @@ export default function ProfileModal({ userId, open, onClose, onOpenConversation
   const blockUser = useBlockUser()
   const unblockUser = useUnblockUser()
   const openDirect = useOpenDirectChat()
+  const confirm = useConfirm()
 
   const run = useCallback(
-    async (action, successMessage) => {
+    async (action, successMessage, confirmOptions) => {
+      if (confirmOptions && !(await confirm(confirmOptions))) return null
       try {
         const result = await action()
         if (successMessage) toast.success(successMessage)
@@ -38,8 +42,13 @@ export default function ProfileModal({ userId, open, onClose, onOpenConversation
         return null
       }
     },
-    [toast],
+    [confirm, toast],
   )
+
+  // A freshly fetched profile is the most authoritative identity the app ever sees.
+  useEffect(() => {
+    if (profile) rememberPerson(profile)
+  }, [profile])
 
   const online = profile ? isOnline(profile.user_id) || profile.is_online : false
 
@@ -86,10 +95,16 @@ export default function ProfileModal({ userId, open, onClose, onOpenConversation
                   run(
                     () => unblockUser.mutateAsync(profile.user_id),
                     `${profile.name} unblocked.`,
+                    {
+                      title: `Unblock ${profile.name}?`,
+                      description: 'They will be able to message you again.',
+                      confirmLabel: 'Unblock',
+                      tone: 'default',
+                    },
                   )
                 }
               >
-                <ShieldOff className="h-5 w-5" />
+                <ShieldOff className="icon-sm" />
                 Unblock
               </Button>
             </div>
@@ -106,7 +121,7 @@ export default function ProfileModal({ userId, open, onClose, onOpenConversation
                   }
                 }}
               >
-                <MessageSquare className="h-5 w-5" />
+                <MessageSquare className="icon-sm" />
                 Message
               </Button>
 
@@ -119,10 +134,16 @@ export default function ProfileModal({ userId, open, onClose, onOpenConversation
                     run(
                       () => removeFriend.mutateAsync(profile.user_id),
                       `${profile.name} removed from friends.`,
+                      {
+                        title: `Remove ${profile.name}?`,
+                        description:
+                          'They will be removed from your friends list. You will need to send a new request to connect again.',
+                        confirmLabel: 'Remove',
+                      },
                     )
                   }
                 >
-                  <UserMinus className="h-5 w-5" />
+                  <UserMinus className="icon-sm" />
                   Remove friend
                 </Button>
               ) : (
@@ -137,7 +158,7 @@ export default function ProfileModal({ userId, open, onClose, onOpenConversation
                     )
                   }
                 >
-                  <UserPlus className="h-5 w-5" />
+                  <UserPlus className="icon-sm" />
                   Add friend
                 </Button>
               )}
@@ -145,13 +166,18 @@ export default function ProfileModal({ userId, open, onClose, onOpenConversation
               <Button
                 variant="ghost"
                 fullWidth
-                className="text-red-500 hover:bg-red-500/10"
+                className="text-danger hover:bg-danger-soft"
                 loading={blockUser.isPending}
                 onClick={() =>
-                  run(() => blockUser.mutateAsync(profile.user_id), `${profile.name} blocked.`)
+                  run(() => blockUser.mutateAsync(profile.user_id), `${profile.name} blocked.`, {
+                    title: `Block ${profile.name}?`,
+                    description:
+                      'They will not be able to message you, and your conversation becomes read-only. You can unblock them later from Settings.',
+                    confirmLabel: 'Block',
+                  })
                 }
               >
-                <Ban className="h-5 w-5" />
+                <Ban className="icon-sm" />
                 Block
               </Button>
             </div>

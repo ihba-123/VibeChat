@@ -116,6 +116,12 @@ export function useSendMessage(roomId) {
       const clientId = makeClientId()
       const now = new Date().toISOString()
 
+      // The auth user comes from the login response and carries no avatar, so the
+      // profile cache is read for it. Without this the sender's own bubble shows an
+      // initials badge until the server echo arrives and swaps in the photo.
+      const profile = queryClient.getQueryData(keys.me)
+      const myId = profile?.user_id ?? user?.user_id ?? user?.id ?? null
+
       addPendingMessage(queryClient, roomId, {
         id: clientId,
         clientId,
@@ -124,11 +130,11 @@ export function useSendMessage(roomId) {
         attachment: null,
         images: null,
         timestamp: now,
-        sender_id: user?.user_id ?? user?.id ?? null,
+        sender_id: myId,
         sender: {
-          user_id: user?.user_id ?? user?.id ?? null,
-          name: user?.name,
-          photo: user?.photo ?? null,
+          user_id: myId,
+          name: profile?.name ?? user?.name,
+          photo: profile?.photo ?? user?.photo ?? null,
         },
         status: 'sending',
         read_by_count: 1,
@@ -141,7 +147,7 @@ export function useSendMessage(roomId) {
             id: clientId,
             preview: text,
             timestamp: now,
-            sender_id: user?.user_id ?? user?.id ?? null,
+            sender_id: myId,
             is_mine: true,
           },
           last_activity: now,

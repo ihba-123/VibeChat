@@ -225,6 +225,14 @@ TEMPLATES = [
 # --------------------
 REDIS_URL = config('REDIS_URL', default='redis://127.0.0.1:6379')
 
+# One Redis instance, three logical databases, so channel-layer traffic, cached
+# values and the task queue never collide (a `FLUSHDB` on one cannot wipe another):
+#
+#   DB 0 -> Django Channels    DB 1 -> Django cache    DB 2 -> Celery broker/results
+REDIS_CHANNELS_DB = config('REDIS_CHANNELS_DB', default=0, cast=int)
+REDIS_CACHE_DB = config('REDIS_CACHE_DB', default=1, cast=int)
+REDIS_CELERY_DB = config('REDIS_CELERY_DB', default=2, cast=int)
+
 ASGI_APPLICATION = 'System.asgi.application'
 
 # Redis is the real deployment target for both of the following. The in-memory
@@ -239,7 +247,7 @@ else:
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
             'CONFIG': {
-                "hosts": [f"{REDIS_URL}/{config('REDIS_CHANNELS_DB', default=1, cast=int)}"],
+                "hosts": [f"{REDIS_URL}/{REDIS_CHANNELS_DB}"],
                 # Per-channel buffer. The default of 100 starts dropping messages
                 # for a busy room as soon as one client falls behind.
                 "capacity": config('CHANNEL_CAPACITY', default=1500, cast=int),
@@ -268,7 +276,7 @@ else:
     CACHES = {
         "default": {
             "BACKEND": "django.core.cache.backends.redis.RedisCache",
-            "LOCATION": f"{REDIS_URL}/{config('REDIS_CACHE_DB', default=2, cast=int)}",
+            "LOCATION": f"{REDIS_URL}/{REDIS_CACHE_DB}",
             "KEY_PREFIX": config('CACHE_KEY_PREFIX', default='vibechat'),
             "TIMEOUT": 300,
         }
@@ -287,6 +295,11 @@ CORS_ALLOW_CREDENTIALS = True
 # --------------------
 # DATABASE
 # --------------------
+# Declares that a connection pooler (pgbouncer, RDS Proxy, …) sits in front, which
+# is the only situation where persistent connections are safe under ASGI. Checked by
+# chatapp.checks.check_persistent_connections.
+DB_BEHIND_POOLER = config('DB_BEHIND_POOLER', default=False, cast=bool)
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -295,9 +308,17 @@ DATABASES = {
         'PASSWORD': config('DB_PASSWORD'),
         'HOST': config('DB_HOST', default='127.0.0.1'),
         'PORT': config('DB_PORT', default='5432'),
-        # Reuse connections instead of a TCP handshake + auth per request.
-        'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=60, cast=int),
-        'CONN_HEALTH_CHECKS': True,
+        # 0 = close the connection after each request/operation.
+        #
+        # Persistent connections must stay off here unless a pooler (pgbouncer,
+        # psycopg pool) sits in front. Django stores them in thread-local storage,
+        # and under ASGI every request runs on an ASGI thread-pool thread, so each
+        # new thread opens its own connection and holds it for CONN_MAX_AGE seconds
+        # while close_old_connections() only ever closes the *current* thread's.
+        # Thread churn from parallel requests and WebSocket reconnects then walks
+        # straight into "FATAL: sorry, too many clients already".
+        'CONN_MAX_AGE': config('DB_CONN_MAX_AGE', default=0, cast=int),
+        'CONN_HEALTH_CHECKS': config('DB_CONN_HEALTH_CHECKS', default=False, cast=bool),
         'OPTIONS': {
             'connect_timeout': config('DB_CONNECT_TIMEOUT', default=10, cast=int),
         },
@@ -379,8 +400,8 @@ SIMPLE_JWT = {
 # --------------------
 # CELERY
 # --------------------
-CELERY_BROKER_URL = config('CELERY_BROKER_URL', default=f'{REDIS_URL}/0')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default=f'{REDIS_URL}/0')
+CELERY_BROKER_URL = config('CELERY_BROKER_URL', default=f'{REDIS_URL}/{REDIS_CELERY_DB}')
+CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND', default=f'{REDIS_URL}/{REDIS_CELERY_DB}')
 # Dev escape hatch: run tasks inline so OTP email works without a broker or worker.
 CELERY_TASK_ALWAYS_EAGER = config('CELERY_TASK_ALWAYS_EAGER', default=False, cast=bool)
 CELERY_TASK_EAGER_PROPAGATES = False

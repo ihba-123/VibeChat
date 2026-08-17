@@ -16,4 +16,17 @@ urlpatterns = [
 if settings.DEBUG and settings.MEDIA_BACKEND == 'local':
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# http://127.0.0.1:8000/accounts/google/login/callback/
+# Google OAuth: allauth builds the redirect_uri from the *request host*, so the URI
+# sent to Google is whatever host the browser used. Google requires an exact match
+# against the client's "Authorized redirect URIs", and it treats localhost and
+# 127.0.0.1 as different origins — registering one does not authorize the other.
+#
+# The SPA sends users to VITE_API_BASE_URL (http://localhost:8000), so register at
+# minimum:
+#     http://localhost:8000/accounts/google/login/callback/
+# and register the 127.0.0.1 form too if the backend is ever reached that way:
+#     http://127.0.0.1:8000/accounts/google/login/callback/
+#
+# The host also has to stay consistent after the redirect: the allauth session cookie
+# is host-scoped, so /api/auth/session-token/ must be called on the same host that
+# completed the OAuth flow or the exchange has no session to trade.

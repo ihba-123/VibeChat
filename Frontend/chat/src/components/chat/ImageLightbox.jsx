@@ -36,7 +36,7 @@ export default function ImageLightbox({ src, onClose }) {
               aria-label="Open original image"
               className="rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20"
             >
-              <ExternalLink className="h-6 w-6" />
+              <ExternalLink className="icon-lg" />
             </a>
             <button
               type="button"
@@ -44,7 +44,7 @@ export default function ImageLightbox({ src, onClose }) {
               aria-label="Close preview"
               className="rounded-full bg-white/10 p-2.5 text-white transition-colors hover:bg-white/20"
             >
-              <X className="h-6 w-6" />
+              <X className="icon-lg" />
             </button>
           </div>
 

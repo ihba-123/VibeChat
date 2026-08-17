@@ -44,11 +44,11 @@ export default defineConfig([
     // Context modules intentionally export a provider component alongside its
     // hook; that is the standard pattern and does not actually break fast refresh
     // for the provider itself.
-    files: ['**/*Provider.jsx', 'src/components/Toaster.jsx'],
+    files: ['**/*Provider.jsx', 'src/components/Toaster.jsx', 'src/components/ConfirmDialog.jsx'],
     rules: {
       'react-refresh/only-export-components': [
         'warn',
-        { allowExportNames: ['useAuth', 'useToast', 'useRealtime'] },
+        { allowExportNames: ['useAuth', 'useToast', 'useRealtime', 'useConfirm'] },
       ],
     },
   },

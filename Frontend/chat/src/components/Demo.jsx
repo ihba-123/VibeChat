@@ -2,7 +2,7 @@ import { motion } from "framer-motion"
 
 export default function Demo() {
   return (
-    <section id="product" className="py-20 md:py-32 px-4 sm:px-6 lg:px-8">
+    <section id="product" className="scroll-mt-24 py-20 md:py-32 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -11,8 +11,8 @@ export default function Demo() {
           viewport={{ once: true }}
           className="text-center mb-12"
         >
-          <h2 className="text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4">Sleek & Intuitive</h2>
-          <p className="text-lg text-foreground/60 font-light">
+          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Sleek & Intuitive</h2>
+          <p className="text-lg text-foreground/60 font-normal">
             Experience a beautiful interface designed for modern communication
           </p>
         </motion.div>
@@ -42,8 +42,8 @@ export default function Demo() {
               whileHover={{ scale: 1.05 }}
               className="p-6 bg-muted/50 rounded-xl text-center cursor-pointer"
             >
-              <p className="text-lg font-poppins font-bold text-foreground">{item}</p>
-              <p className="text-sm text-foreground/60 mt-2 font-light">
+              <p className="text-lg font-bold text-foreground">{item}</p>
+              <p className="text-sm text-foreground/60 mt-2 font-normal">
                 {item === "Fast" && "Real-time message delivery with file sync"}
                 {item === "Secure" && "Military-grade encryption for all data"}
                 {item === "Social" && "Build communities and share moments"}

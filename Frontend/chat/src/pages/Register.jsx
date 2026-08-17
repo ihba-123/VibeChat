@@ -20,10 +20,10 @@ function passwordStrength(password) {
   if (/\d/.test(password)) score += 1
   if (/[^A-Za-z0-9]/.test(password)) score += 1
 
-  if (score <= 2) return { score, label: 'Weak', tone: 'bg-red-500' }
-  if (score === 3) return { score, label: 'Fair', tone: 'bg-amber-500' }
-  if (score === 4) return { score, label: 'Good', tone: 'bg-emerald-500' }
-  return { score, label: 'Strong', tone: 'bg-emerald-500' }
+  if (score <= 2) return { score, label: 'Weak', tone: 'bg-danger' }
+  if (score === 3) return { score, label: 'Fair', tone: 'bg-warning' }
+  if (score === 4) return { score, label: 'Good', tone: 'bg-success' }
+  return { score, label: 'Strong', tone: 'bg-success' }
 }
 
 export default function Register() {
@@ -90,6 +90,7 @@ export default function Register() {
 
   return (
     <AuthLayout
+      scene="team"
       title="Create your account"
       subtitle="It takes about twenty seconds."
       footer={
@@ -105,7 +106,7 @@ export default function Register() {
         {error && (
           <div
             role="alert"
-            className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-600 dark:text-red-400"
+            className="rounded-lg border border-danger-border bg-danger-soft px-3 py-2.5 text-sm text-danger"
           >
             {error}
           </div>
@@ -133,7 +134,6 @@ export default function Register() {
         />
 
         <div>
-          <div className="relative">
             <Input
               label="Password"
               type={showPassword ? 'text' : 'password'}
@@ -143,16 +143,17 @@ export default function Register() {
               onChange={update('password')}
               error={fieldErrors.password}
               placeholder="At least 8 characters"
-            />
+          trailing={
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-3 top-[38px] rounded p-1 text-muted-foreground hover:text-foreground"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? <EyeOff className="icon-md" /> : <Eye className="icon-md" />}
             </button>
-          </div>
+          }
+        />
 
           {form.password && (
             <div className="mt-2 flex items-center gap-2">

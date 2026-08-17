@@ -135,7 +135,7 @@ export default function ConversationList({
       <div className="flex shrink-0 items-center gap-2 p-3">
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+            className="icon-md pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <input
@@ -144,7 +144,7 @@ export default function ConversationList({
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search conversations"
             aria-label="Search conversations"
-            className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-10 text-sm placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-input bg-field py-2.5 pl-10 pr-10 text-sm placeholder:text-subtle-foreground transition-colors hover:bg-field-hover hover:border-border-strong focus:border-transparent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-ring"
           />
           {search && (
             <button
@@ -153,7 +153,7 @@ export default function ConversationList({
               aria-label="Clear search"
               className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <X className="h-5 w-5" />
+              <X className="icon-md" />
             </button>
           )}
         </div>

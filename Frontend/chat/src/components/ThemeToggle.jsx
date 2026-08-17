@@ -1,24 +1,45 @@
 import { Moon, Sun } from 'lucide-react'
 
 import { useTheme } from '../hooks/ui'
-import { cn } from '../lib/utils'
 import { IconButton } from './ui'
 
-/** Icon scales with the button, so `size="lg"` actually reads as larger. */
-const ICON_SIZES = { sm: 'h-5 w-5', md: 'h-6 w-6', lg: 'h-7 w-7' }
-
-export default function ThemeToggle({ size = 'md', className }) {
+/**
+ * Theme switch.
+ *
+ * No size prop and no private size map. This is primary chrome wherever it
+ * appears — the rail, the sidebar header, the auth screens — so it uses the same
+ * 40px target and 24px glyph as every other chrome control. It previously carried
+ * its own `ICON_SIZES` lookup, which is exactly how it ended up smaller than the
+ * buttons beside it.
+ *
+ * Both glyphs are always mounted and cross-faded. Rendering one *or* the other
+ * unmounted a node and mounted a different one in the same frame, so the icon
+ * blanked while the rest of the page was still fading — a visible blink against
+ * an otherwise smooth transition.
+ */
+export default function ThemeToggle({ className }) {
   const { isDark, toggle } = useTheme()
-  const iconClass = cn(ICON_SIZES[size] ?? ICON_SIZES.md)
 
   return (
     <IconButton
       label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       onClick={toggle}
-      size={size}
       className={className}
     >
-      {isDark ? <Sun className={iconClass} /> : <Moon className={iconClass} />}
+      <span className="relative grid icon-lg place-items-center">
+        <Sun
+          aria-hidden="true"
+          className={`icon-lg col-start-1 row-start-1 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${
+            isDark ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-75 opacity-0'
+          }`}
+        />
+        <Moon
+          aria-hidden="true"
+          className={`icon-lg col-start-1 row-start-1 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${
+            isDark ? 'rotate-90 scale-75 opacity-0' : 'rotate-0 scale-100 opacity-100'
+          }`}
+        />
+      </span>
     </IconButton>
   )
 }

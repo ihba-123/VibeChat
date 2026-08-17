@@ -1,8 +1,9 @@
-import { ArrowLeft, Camera, LogOut, ShieldOff, Trash2 } from 'lucide-react'
+import { ArrowLeft, Camera, LogOut, ShieldOff } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../auth/AuthProvider'
+import { useConfirm } from '../components/ConfirmDialog'
 import { useToast } from '../components/Toaster'
 import {
   Avatar,
@@ -117,7 +118,7 @@ function ProfileSection() {
             aria-label="Change profile photo"
             className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md transition-transform hover:scale-105"
           >
-            <Camera className="h-5 w-5" />
+            <Camera className="icon-sm" />
           </button>
           <input
             ref={fileInputRef}
@@ -146,7 +147,7 @@ function ProfileSection() {
               Undo photo change
             </button>
           )}
-          {errors.photo && <p className="mt-1 text-xs text-red-500">{errors.photo}</p>}
+          {errors.photo && <p className="mt-1 text-xs text-danger">{errors.photo}</p>}
         </div>
       </div>
 
@@ -257,6 +258,7 @@ function PrivacySection() {
   const { blocked, isLoading, hasNextPage, fetchNextPage, isFetchingNextPage } = useBlockedUsers()
   const unblockUser = useUnblockUser()
   const toast = useToast()
+  const confirm = useConfirm()
 
   if (isLoading) {
     return (
@@ -297,6 +299,13 @@ function PrivacySection() {
             variant="secondary"
             loading={unblockUser.isPending && unblockUser.variables === entry.user.user_id}
             onClick={async () => {
+              const ok = await confirm({
+                title: `Unblock ${entry.user.name}?`,
+                description: 'They will be able to message you again.',
+                confirmLabel: 'Unblock',
+                tone: 'default',
+              })
+              if (!ok) return
               try {
                 await unblockUser.mutateAsync(entry.user.user_id)
                 toast.success(`${entry.user.name} unblocked.`)
@@ -324,17 +333,29 @@ function PrivacySection() {
 export default function Settings() {
   const navigate = useNavigate()
   const { logout } = useAuth()
+  const confirm = useConfirm()
   const [tab, setTab] = useState('profile')
 
+  const signOut = async () => {
+    const ok = await confirm({
+      title: 'Sign out?',
+      description: 'You will need to sign in again to read or send messages on this device.',
+      confirmLabel: 'Sign out',
+    })
+    if (ok) logout()
+  }
+
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-3 sm:px-5">
-        <IconButton label="Back" className="lg:hidden" onClick={() => navigate('/app')}>
-          <ArrowLeft className="h-6 w-6" />
+    // A full page of its own, not a pane inside the shell — so it owns the viewport
+    // and the back button is always available rather than only on narrow screens.
+    <div className="flex h-dvh min-h-0 flex-col bg-background">
+      <header className="glass relative z-20 flex h-16 shrink-0 items-center gap-3 border-b px-3 sm:px-5">
+        <IconButton label="Back to chats" onClick={() => navigate('/app')}>
+          <ArrowLeft className="icon-lg" />
         </IconButton>
-        <h1 className="flex-1 font-poppins text-lg font-bold text-card-foreground">Settings</h1>
-        <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-500/10" onClick={logout}>
-          <LogOut className="h-5 w-5" />
+        <h1 className="flex-1 text-lg font-bold text-card-foreground">Settings</h1>
+        <Button variant="ghost" size="sm" className="text-danger hover:bg-danger-soft" onClick={signOut}>
+          <LogOut className="icon-sm" />
           Sign out
         </Button>
       </header>

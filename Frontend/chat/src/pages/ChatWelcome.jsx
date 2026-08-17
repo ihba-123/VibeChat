@@ -11,9 +11,9 @@ export default function ChatWelcome() {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 text-center">
       <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-        <MessagesSquare className="h-8 w-8 text-primary" aria-hidden />
+        <MessagesSquare className="icon-xl text-primary" aria-hidden />
       </span>
-      <h2 className="mt-5 font-poppins text-xl font-bold text-foreground">
+      <h2 className="mt-5 text-xl font-bold text-foreground">
         {firstName ? `Welcome back, ${firstName}` : `Welcome to ${config.appName}`}
       </h2>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground">

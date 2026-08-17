@@ -23,12 +23,17 @@ function DateDivider({ value }) {
 function LoadingHistory() {
   return (
     <div className="space-y-4 p-4">
-      {[0, 1, 2, 3, 4].map((index) => (
-        <div key={index} className={cn('flex gap-2', index % 2 ? 'justify-end' : 'justify-start')}>
-          {index % 2 === 0 && <Skeleton className="h-9 w-9 rounded-full" />}
-          <Skeleton className={cn('h-14 rounded-2xl', index % 3 === 0 ? 'w-64' : 'w-44')} />
-        </div>
-      ))}
+      {[0, 1, 2, 3, 4].map((index) => {
+        const outgoing = index % 2 === 1
+        return (
+          <div key={index} className={cn('flex gap-2', outgoing ? 'justify-end' : 'justify-start')}>
+            {/* Both sides carry an avatar now, so the placeholder mirrors that. */}
+            {!outgoing && <Skeleton className="h-9 w-9 shrink-0 rounded-full" />}
+            <Skeleton className={cn('h-14 rounded-2xl', index % 3 === 0 ? 'w-64' : 'w-44')} />
+            {outgoing && <Skeleton className="h-9 w-9 shrink-0 rounded-full" />}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -193,7 +198,7 @@ export default function MessageList({
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        className="h-full overflow-y-auto overscroll-contain"
+        className="h-full overflow-y-auto overflow-x-hidden overscroll-contain"
         aria-live="polite"
         aria-relevant="additions"
       >
@@ -207,7 +212,7 @@ export default function MessageList({
           Messages also fill from the top downwards, so the first message in a new
           conversation appears at the top rather than floating above the composer.
         */}
-        <div className="flex w-full flex-col px-4 py-4 sm:px-8">
+        <div className="flex w-full min-w-0 flex-col px-3 py-4 sm:px-6 lg:px-8">
         <div ref={topSentinelRef} aria-hidden />
 
         {hasOlder && (
@@ -269,9 +274,9 @@ export default function MessageList({
           type="button"
           onClick={() => scrollToBottom()}
           aria-label="Jump to latest messages"
-          className="absolute bottom-4 right-4 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card shadow-lg transition-transform hover:scale-105"
+          className="glass-strong absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border shadow-lg transition-transform hover:scale-105"
         >
-          <ArrowDown className="h-6 w-6 text-foreground" />
+          <ArrowDown className="icon-lg text-foreground" />
         </button>
       )}
     </div>

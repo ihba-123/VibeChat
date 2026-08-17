@@ -28,7 +28,12 @@ class RefreshTokenView(APIView):
         )
 
         if 'error' in data:
-            response = Response({'detail': data['error'], 'code': 'token_invalid'}, status=status_code)
+            # The code tells the client whether "signed out" may be remembered:
+            # 'no_session' is definitive, 'session_expired' may be transient.
+            response = Response(
+                {'detail': data['error'], 'code': data.get('code', 'session_expired')},
+                status=status_code,
+            )
             # Drop the unusable cookie so the client stops retrying with it.
             return clear_refresh_cookie(response)
 

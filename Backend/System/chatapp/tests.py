@@ -4,6 +4,7 @@ Each test names the defect it pins down, so a future change that reintroduces on
 of them fails here rather than in production.
 """
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -146,10 +147,21 @@ class AuthApiTests(TestCase):
         self.assertIn("access", response.data)
         self.assertTrue(response.data["access"])
 
-    def test_refresh_without_cookie_is_401_and_clears_the_cookie(self):
+    def test_refresh_without_a_cookie_reports_no_session(self):
+        """Definitive: the browser sent nothing, so the client may remember it."""
         response = APIClient().post(reverse("refresh-token"), {}, format="json")
         self.assertEqual(response.status_code, 401)
-        self.assertEqual(response.data["code"], "token_invalid")
+        self.assertEqual(response.data["code"], "no_session")
+
+    def test_refresh_with_an_unusable_cookie_reports_session_expired(self):
+        """Not definitive — this also covers a tab that lost a rotation race — so the
+        client must not record it as "signed out" and strand a user who still holds a
+        working cookie on the login screen."""
+        client = APIClient()
+        client.cookies["refresh_token"] = "not-a-real-token"
+        response = client.post(reverse("refresh-token"), {}, format="json")
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.data["code"], "session_expired")
 
     def test_login_rejects_a_wrong_password_with_401(self):
         make_user("login@example.com")
@@ -614,6 +626,78 @@ class PeopleAndProfileApiTests(TestCase):
             reverse("blocked-users"),
         ):
             self.assertEqual(anonymous.get(url).status_code, 401, url)
+
+
+class ConfigurationCheckTests(TestCase):
+    """Guards for settings that only misbehave under load."""
+
+    def test_persistent_connections_are_off_by_default(self):
+        """CONN_MAX_AGE > 0 under ASGI accumulates one connection per thread-pool
+        thread until PostgreSQL answers "too many clients already"."""
+        from django.conf import settings
+
+        self.assertEqual(settings.DATABASES["default"]["CONN_MAX_AGE"], 0)
+
+    def test_check_warns_about_persistent_connections_without_a_pooler(self):
+        from .checks import check_persistent_connections
+
+        databases = {"default": {**settings.DATABASES["default"], "CONN_MAX_AGE": 60}}
+        with override_settings(DATABASES=databases, DB_BEHIND_POOLER=False):
+            warnings = check_persistent_connections(None)
+        self.assertEqual([w.id for w in warnings], ["chatapp.W001"])
+
+    def test_check_is_silent_when_a_pooler_is_declared(self):
+        from .checks import check_persistent_connections
+
+        databases = {"default": {**settings.DATABASES["default"], "CONN_MAX_AGE": 60}}
+        with override_settings(DATABASES=databases, DB_BEHIND_POOLER=True):
+            self.assertEqual(check_persistent_connections(None), [])
+
+    def test_check_warns_about_a_missing_encryption_key(self):
+        from .checks import check_message_encryption_key
+
+        with override_settings(FERNET_KEYS=[]):
+            warnings = check_message_encryption_key(None)
+        self.assertEqual([w.id for w in warnings], ["chatapp.W002"])
+
+    def test_check_warns_when_google_signin_is_half_configured(self):
+        """The frontend shows the Google button by default, so a missing credential on
+        this side is a button that leads to an error page."""
+        from .checks import check_google_oauth_config
+
+        providers = {'google': {'APP': {'client_id': 'abc.apps.googleusercontent.com', 'secret': ''}}}
+        with override_settings(SOCIALACCOUNT_PROVIDERS=providers):
+            ids = [w.id for w in check_google_oauth_config(None)]
+        self.assertEqual(ids, ['chatapp.W005'])
+
+    def test_check_is_silent_when_google_signin_is_off(self):
+        from .checks import check_google_oauth_config
+
+        with override_settings(SOCIALACCOUNT_PROVIDERS={'google': {'APP': {'client_id': '', 'secret': ''}}}):
+            self.assertEqual(check_google_oauth_config(None), [])
+
+    def test_check_reports_the_exact_redirect_uri_to_register(self):
+        """Google matches the redirect URI exactly, so the value is surfaced rather
+        than left for the developer to reconstruct."""
+        from .checks import check_google_oauth_config
+
+        providers = {'google': {'APP': {'client_id': 'abc', 'secret': 'shh'}}}
+        with override_settings(SOCIALACCOUNT_PROVIDERS=providers, BACKEND_URL='http://localhost:8000'):
+            messages = check_google_oauth_config(None)
+        self.assertEqual([m.id for m in messages], ['chatapp.I001'])
+        self.assertIn(
+            'http://localhost:8000/accounts/google/login/callback/', messages[0].hint
+        )
+
+    def test_check_warns_about_per_process_backends(self):
+        from .checks import check_shared_cache_and_channel_layer
+
+        with override_settings(CACHE_BACKEND="locmem", CHANNEL_LAYER_BACKEND="inmemory"):
+            ids = [w.id for w in check_shared_cache_and_channel_layer(None)]
+        self.assertEqual(ids, ["chatapp.W003", "chatapp.W004"])
+
+        with override_settings(CACHE_BACKEND="redis", CHANNEL_LAYER_BACKEND="redis"):
+            self.assertEqual(check_shared_cache_and_channel_layer(None), [])
 
 
 @override_settings(**TEST_SETTINGS)

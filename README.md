@@ -57,24 +57,42 @@ python -c "import cloudinary,cloudinary.api;cloudinary.config(cloud_name='...',a
 
 `.env.example` documents every other setting with its default.
 
-**Redis** backs the channel layer (realtime), the cache (presence, rate limits) and
-Celery (OTP email). For a single dev process without Redis installed, set:
+### Redis
+
+Required for the channel layer, the cache and Celery. One instance, three logical
+databases, so the workloads cannot collide and a `FLUSHDB` on one cannot wipe another:
 
 ```
-CACHE_BACKEND=locmem
-CHANNEL_LAYER_BACKEND=inmemory
-CELERY_TASK_ALWAYS_EAGER=True
-EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+Django Channels ──→ redis://127.0.0.1:6379/0     REDIS_CHANNELS_DB=0
+Django cache ─────→ redis://127.0.0.1:6379/1     REDIS_CACHE_DB=1
+Celery ───────────→ redis://127.0.0.1:6379/2     REDIS_CELERY_DB=2
 ```
 
-These are per-process and **must not** be used with more than one worker — presence
-counting and rate limiting both become wrong. Use Redis for anything real.
+All three derive from a single `REDIS_URL`, so pointing at a managed Redis is a
+one-line change. Verify with `redis-cli ping` (expect `PONG`) and `manage.py check`.
 
-With Redis, OTP email needs a worker:
+This is what makes multiple workers correct:
+
+```
+Worker 1 ─┐
+Worker 2 ─┼── Redis ── shared cache (presence, rate limits)
+Worker 3 ─┘           shared channel layer (realtime fan-out)
+```
+
+Without it, a socket held by worker 2 never receives a message published by worker 1,
+and each worker keeps its own presence counters.
+
+OTP email needs a worker running:
 
 ```bash
 celery -A System worker -l info -Q emails,default
 ```
+
+For a single dev process with no Redis installed, `CACHE_BACKEND=locmem` and
+`CHANNEL_LAYER_BACKEND=inmemory` fall back to per-process implementations (plus
+`CELERY_TASK_ALWAYS_EAGER=True` and the console email backend to skip the broker).
+`manage.py check` warns when any of these are active — they **must not** be used with
+more than one worker.
 
 ### 2. Frontend
 
@@ -191,6 +209,28 @@ React Query, with the socket writing directly into the cache (`src/lib/cacheUpda
   localStorage, so a reload paints real content instead of spinners. Bump
   `VITE_CACHE_KEY` to invalidate every client's snapshot after a breaking change.
 
+### Typography
+
+One family, Inter, applied globally from `src/index.css`. Self-hosted via
+`@fontsource-variable/inter` and imported in `main.jsx` — no third-party request on
+first paint, works offline, and the variable file covers every weight in one download
+per subset.
+
+`--font-inter` holds the stack; `--font-sans` and the Tailwind `--font-sans` theme
+token both point at it, which is also what makes Tailwind derive its own
+`--default-font-family` from Inter. A universal `font-family: inherit` catches
+third-party markup, an explicit rule covers form controls (which never inherit the
+document font), and `code`/`pre`/`kbd`/`samp` are restored to the mono stack
+afterwards.
+
+Only four weights are used: 400 body and chat messages, 500 buttons/labels/nav, 600
+headings and usernames, 700 major headings.
+
+Before this, three families were declared (`Poppins` on `body`, `Geist` in the theme
+token, `Poppins Fallback` via a `font-poppins` utility) and **none of them were ever
+loaded** — `index.html` linked no font at all, so every surface silently fell back to
+the browser default.
+
 ### Configuration
 
 No host, port, path, or asset id is written into application code. The backend reads
@@ -211,8 +251,15 @@ everything through `python-decouple`; the frontend funnels every `VITE_*` var th
   index instead of degrading as the offset grows.
 - **Blocks are cached** (5 min, explicitly invalidated) so the check on every message
   send is not a database round trip.
-- **Connection reuse** via `CONN_MAX_AGE`, and a per-connection send budget on the
-  socket so one runaway client cannot saturate the channel layer.
+- **`CONN_MAX_AGE` stays at 0** unless a pooler is in front. Django holds persistent
+  connections in thread-local storage and `close_old_connections()` only closes the
+  calling thread's, so under ASGI every new thread-pool thread opens a connection and
+  keeps it — the count climbs until PostgreSQL answers *"FATAL: sorry, too many
+  clients already"*. Measured: 240 requests over 6 rounds of 40 concurrent held at
+  **1** connection with it off, versus 42 → 57 → 67 → exhausted with it at 60.
+  `chatapp/checks.py` warns at startup if it is enabled without `DB_BEHIND_POOLER`.
+- **A per-connection send budget** on the socket so one runaway client cannot
+  saturate the channel layer.
 - **Throttle scopes** per concern (`auth`, `otp`, `search`, `upload`) rather than one
   shared anonymous bucket.
 

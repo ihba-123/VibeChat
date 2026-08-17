@@ -13,13 +13,13 @@ function Menu({ items }) {
   return (
     <div ref={ref} className="relative">
       <IconButton label="Conversation options" onClick={() => setOpen((value) => !value)}>
-        <MoreVertical className="h-6 w-6" />
+        <MoreVertical className="icon-lg" />
       </IconButton>
 
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border border-border bg-card py-1 shadow-xl"
+          className="glass-strong absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border py-1 shadow-xl"
         >
           {items.map((item) => (
             <button
@@ -32,10 +32,10 @@ function Menu({ items }) {
               }}
               className={cn(
                 'flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors hover:bg-muted',
-                item.danger ? 'text-red-500' : 'text-card-foreground',
+                item.danger ? 'text-danger' : 'text-card-foreground',
               )}
             >
-              {item.icon && <item.icon className="h-5 w-5" aria-hidden />}
+              {item.icon && <item.icon className="icon-sm" aria-hidden />}
               {item.label}
             </button>
           ))}
@@ -61,10 +61,10 @@ export default function ChatHeader({
   // back — so render the frame and fill in the details when they arrive.
   if (!conversation) {
     return (
-      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-3 sm:px-4">
+      <header className="glass relative z-30 flex h-16 shrink-0 items-center gap-3 border-b px-3 sm:px-4">
         {onBack && (
           <IconButton label="Back to conversations" className="lg:hidden" onClick={onBack}>
-            <ArrowLeft className="h-6 w-6" />
+            <ArrowLeft className="icon-lg" />
           </IconButton>
         )}
         <div className="h-11 w-11 animate-pulse rounded-full bg-muted" aria-hidden />
@@ -105,10 +105,10 @@ export default function ChatHeader({
   ].filter(Boolean)
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-3 border-b border-border bg-card px-3 sm:px-4">
+    <header className="glass relative z-30 flex h-16 shrink-0 items-center gap-3 border-b px-3 sm:px-4">
       {onBack && (
         <IconButton label="Back to conversations" className="lg:hidden" onClick={onBack}>
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowLeft className="icon-lg" />
         </IconButton>
       )}
 

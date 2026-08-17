@@ -93,6 +93,7 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout
+      scene="quiet"
       title={
         step === 'done'
           ? 'Password updated'
@@ -117,7 +118,7 @@ export default function ForgotPassword() {
             to="/login"
             className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="icon-xs" />
             Back to sign in
           </Link>
         )
@@ -141,7 +142,7 @@ export default function ForgotPassword() {
       {error && (
         <div
           role="alert"
-          className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-600 dark:text-red-400"
+          className="mb-4 rounded-lg border border-danger-border bg-danger-soft px-3 py-2.5 text-sm text-danger"
         >
           {error}
         </div>
@@ -225,7 +226,7 @@ export default function ForgotPassword() {
 
       {step === 'done' && (
         <div className="flex flex-col items-center text-center">
-          <CheckCircle2 className="h-12 w-12 text-emerald-500" aria-hidden />
+          <CheckCircle2 className="h-12 w-12 text-success" aria-hidden />
           <p className="mt-4 text-sm text-muted-foreground">
             Your password has been changed and other sessions were signed out.
           </p>

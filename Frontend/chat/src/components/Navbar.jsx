@@ -1,10 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion"
-import { Moon, Sun, Menu, X, MessageCircleCode } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Menu, X, MessageCircleCode } from "lucide-react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 
 import { useAuth } from "../auth/AuthProvider"
-import { useTheme } from "../hooks/ui"
 import config from "../config"
 
 const navItems = [
@@ -14,17 +13,9 @@ const navItems = [
 ]
 
 export default function Navbar() {
-  const [isMounted, setIsMounted] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  // Shared with the rest of the app so the choice persists across screens instead
-  // of each component keeping its own copy of the theme state.
-  const { isDark, toggle: toggleTheme } = useTheme()
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
 
   const handleNavClick = () => setIsMenuOpen(false)
 
@@ -54,7 +45,7 @@ export default function Navbar() {
           >
             <MessageCircleCode />
           </motion.div>
-          <span className="text-xl font-bold font-poppins text-foreground group-hover:text-primary transition-colors">
+          <span className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
             {config.appName}
           </span>
         </Link>
@@ -75,22 +66,8 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Right section - Theme toggle & Auth buttons */}
+        {/* Right section - auth actions */}
         <div className="flex items-center gap-2 md:gap-4">
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={toggleTheme}
-            className="p-2 rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {isMounted && isDark ? (
-              <Sun className="w-5 h-5 text-foreground" />
-            ) : (
-              <Moon className="w-5 h-5 text-foreground" />
-            )}
-          </motion.button>
-
           {/* Mobile menu button */}
           <motion.button
             whileHover={{ scale: 1.1 }}

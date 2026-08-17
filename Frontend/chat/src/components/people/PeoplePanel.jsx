@@ -24,6 +24,7 @@ import {
   useUserSearch,
 } from '../../hooks/useSocial'
 import { useRealtime } from '../../realtime/RealtimeProvider'
+import { useConfirm } from '../ConfirmDialog'
 import { useToast } from '../Toaster'
 import { Button, EmptyState, ErrorState, IconButton, Skeleton, Spinner, Tabs } from '../ui'
 import PersonRow from './PersonRow'
@@ -93,6 +94,8 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
   const isSearching = debouncedSearch.trim().length > 0
 
   const toast = useToast()
+
+  const confirm = useConfirm()
   const { isOnline } = useRealtime()
 
   // Search has its own endpoint (name + email); Discover stays unfiltered.
@@ -158,26 +161,42 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
 
   const block = useCallback(
     async (person) => {
+      const who = person.name || person.email
+      const ok = await confirm({
+        title: `Block ${who}?`,
+        description:
+          'They will not be able to message you, and your conversation becomes read-only. You can unblock them later from Settings.',
+        confirmLabel: 'Block',
+      })
+      if (!ok) return
       try {
         await blockUser.mutateAsync(person.user_id)
-        toast.success(`${person.name || person.email} blocked.`)
+        toast.success(`${who} blocked.`)
       } catch (error) {
         toast.error(error?.message || 'Could not block that person.')
       }
     },
-    [blockUser, toast],
+    [blockUser, confirm, toast],
   )
 
   const unfriend = useCallback(
     async (person) => {
+      const who = person.name || person.email
+      const ok = await confirm({
+        title: `Remove ${who}?`,
+        description:
+          'They will be removed from your friends list. You will need to send a new request to connect again.',
+        confirmLabel: 'Remove',
+      })
+      if (!ok) return
       try {
         await removeFriend.mutateAsync(person.user_id)
-        toast.success(`${person.name || person.email} removed.`)
+        toast.success(`${who} removed.`)
       } catch (error) {
         toast.error(error?.message || 'Could not remove that friend.')
       }
     },
-    [removeFriend, toast],
+    [confirm, removeFriend, toast],
   )
 
   const discoverActions = (person) => (
@@ -188,11 +207,11 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
         onClick={() => addFriend(person)}
         loading={sendRequest.isPending && sendRequest.variables === person.user_id}
       >
-        <UserPlus className="h-5 w-5" />
+        <UserPlus className="icon-sm" />
         Add
       </Button>
       <IconButton label={`Block ${person.name}`} size="sm" onClick={() => block(person)}>
-        <Ban className="h-5 w-5" />
+        <Ban className="icon-sm" />
       </IconButton>
     </>
   )
@@ -205,7 +224,7 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
         onClick={() => startChat(person.user_id)}
         loading={openDirect.isPending && openDirect.variables === person.user_id}
       >
-        <MessageSquare className="h-5 w-5" />
+        <MessageSquare className="icon-sm" />
         Chat
       </Button>
       <IconButton
@@ -213,7 +232,7 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
         size="sm"
         onClick={() => unfriend(person)}
       >
-        <UserMinus className="h-5 w-5" />
+        <UserMinus className="icon-sm" />
       </IconButton>
     </>
   )
@@ -223,7 +242,7 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
       <div className="shrink-0 space-y-3 p-3">
         <div className="relative">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+            className="icon-md pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
           <input
@@ -232,7 +251,7 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search people by name or email"
             aria-label="Search people"
-            className="w-full rounded-lg border border-input bg-background py-2.5 pl-10 pr-10 text-sm placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full rounded-lg border border-input bg-field py-2.5 pl-10 pr-10 text-sm placeholder:text-subtle-foreground transition-colors hover:bg-field-hover hover:border-border-strong focus:border-transparent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-ring"
           />
           {search && (
             <button
@@ -241,7 +260,7 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
               aria-label="Clear search"
               className="absolute right-1.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
-              <X className="h-5 w-5" />
+              <X className="icon-md" />
             </button>
           )}
         </div>
@@ -302,7 +321,7 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
                         respond.isPending && respond.variables?.requestId === person._request.id
                       }
                     >
-                      <Check className="h-5 w-5" />
+                      <Check className="icon-sm" />
                       Accept
                     </Button>
                     <IconButton
@@ -310,7 +329,7 @@ export default function PeoplePanel({ onOpenConversation, onViewProfile }) {
                       size="sm"
                       onClick={() => respondTo(person._request, 'reject')}
                     >
-                      <X className="h-5 w-5" />
+                      <X className="icon-md" />
                     </IconButton>
                   </>
                 )}

@@ -16,19 +16,25 @@ import { accentFor, cn, initials } from '../lib/utils'
 
 const BUTTON_VARIANTS = {
   primary:
-    'bg-primary text-primary-foreground hover:opacity-90 focus-visible:ring-primary shadow-sm',
+    'bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active '
+    + 'focus-visible:ring-primary shadow-sm disabled:bg-muted disabled:text-subtle-foreground',
   secondary:
-    'bg-secondary text-secondary-foreground hover:bg-muted focus-visible:ring-ring border border-border',
-  ghost: 'text-foreground hover:bg-muted focus-visible:ring-ring',
-  danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600 shadow-sm',
+    'bg-secondary text-secondary-foreground hover:bg-muted hover:border-border-strong '
+    + 'focus-visible:ring-ring border border-border disabled:text-subtle-foreground',
+  ghost:
+    'text-foreground hover:bg-muted focus-visible:ring-ring disabled:text-subtle-foreground',
+  danger:
+    'bg-danger text-danger-foreground hover:bg-danger-strong focus-visible:ring-danger '
+    + 'shadow-sm disabled:bg-muted disabled:text-subtle-foreground',
   outline:
-    'border border-border bg-transparent text-foreground hover:bg-muted focus-visible:ring-ring',
+    'border border-border bg-transparent text-foreground hover:bg-muted '
+    + 'hover:border-border-strong focus-visible:ring-ring disabled:text-subtle-foreground',
 }
 
 const BUTTON_SIZES = {
-  sm: 'h-9 px-3 text-sm gap-1.5',
-  md: 'h-11 px-4 text-sm gap-2',
-  lg: 'h-12 px-6 text-base gap-2',
+  sm: 'h-8 px-3 text-sm gap-1.5',
+  md: 'h-10 px-4 text-sm gap-2',
+  lg: 'h-11 px-6 text-base gap-2',
 }
 
 export const Button = forwardRef(function Button(
@@ -55,7 +61,7 @@ export const Button = forwardRef(function Button(
       className={cn(
         'inline-flex items-center justify-center rounded-lg font-semibold transition-all',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-        'disabled:pointer-events-none disabled:opacity-50 active:scale-[0.98]',
+        'disabled:pointer-events-none disabled:opacity-70 disabled:shadow-none active:scale-[0.98]',
         BUTTON_VARIANTS[variant],
         BUTTON_SIZES[size],
         fullWidth && 'w-full',
@@ -63,7 +69,7 @@ export const Button = forwardRef(function Button(
       )}
       {...props}
     >
-      {loading && <Loader2 className="h-5 w-5 animate-spin" aria-hidden />}
+      {loading && <Loader2 className="icon-sm animate-spin" aria-hidden />}
       {children}
     </button>
   )
@@ -73,9 +79,9 @@ export const IconButton = forwardRef(function IconButton(
   { label, className, size = 'md', variant = 'ghost', ...props },
   ref,
 ) {
-  // Same scale as Button (36 / 44 / 48px) so an IconButton and a Button of the
+  // Same scale as Button (32 / 40 / 44px) so an IconButton and a Button of the
   // same nominal size line up when they sit side by side in a row.
-  const dimensions = size === 'sm' ? 'h-9 w-9' : size === 'lg' ? 'h-12 w-12' : 'h-11 w-11'
+  const dimensions = size === 'sm' ? 'h-8 w-8' : size === 'lg' ? 'h-11 w-11' : 'h-10 w-10'
   return (
     <Button
       ref={ref}
@@ -91,7 +97,7 @@ export const IconButton = forwardRef(function IconButton(
 // -------------------------------------------------------------------- input
 
 export const Input = forwardRef(function Input(
-  { label, error, hint, className, id, icon: Icon, ...props },
+  { label, error, hint, className, id, icon: Icon, trailing, ...props },
   ref,
 ) {
   const generatedId = useId()
@@ -105,10 +111,15 @@ export const Input = forwardRef(function Input(
           {label}
         </label>
       )}
+      {/* Adornments are positioned against this wrapper, which contains only the
+          input — never against the whole field group. Call sites used to place a
+          reveal button with a hand-tuned `top-[38px]` guessed from the label height,
+          which drifted out of alignment and overlapped the input the moment the
+          label spacing or the icon size changed. */}
       <div className="relative">
         {Icon && (
           <Icon
-            className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
+            className="icon-md pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             aria-hidden
           />
         )}
@@ -118,19 +129,26 @@ export const Input = forwardRef(function Input(
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cn(
-            'w-full rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground',
-            'placeholder:text-muted-foreground transition-colors',
-            'focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent',
-            'disabled:cursor-not-allowed disabled:opacity-60',
+            'w-full rounded-lg border bg-field px-3 py-2.5 text-sm text-foreground',
+            'placeholder:text-subtle-foreground transition-colors',
+            'hover:bg-field-hover hover:border-border-strong',
+            'focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent focus:bg-surface',
+            'disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-70 disabled:hover:border-border',
             Icon && 'pl-10',
-            error ? 'border-red-500 focus:ring-red-500' : 'border-input',
+            trailing && 'pr-11',
+            error ? 'border-danger focus:ring-danger' : 'border-input',
             className,
           )}
           {...props}
         />
+        {trailing && (
+          <span className="absolute right-1.5 top-1/2 flex -translate-y-1/2 items-center">
+            {trailing}
+          </span>
+        )}
       </div>
       {error ? (
-        <p id={`${inputId}-error`} className="mt-1.5 text-sm text-red-500">
+        <p id={`${inputId}-error`} className="mt-1.5 text-sm text-danger">
           {error}
         </p>
       ) : hint ? (
@@ -158,15 +176,17 @@ export const Textarea = forwardRef(function Textarea({ label, error, className, 
         id={textareaId}
         aria-invalid={error ? true : undefined}
         className={cn(
-          'w-full resize-none rounded-lg border bg-background px-3 py-2.5 text-sm text-foreground',
-          'placeholder:text-muted-foreground transition-colors',
-          'focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent',
-          error ? 'border-red-500' : 'border-input',
+          'w-full resize-none rounded-lg border bg-field px-3 py-2.5 text-sm text-foreground',
+          'placeholder:text-subtle-foreground transition-colors',
+          'hover:bg-field-hover hover:border-border-strong',
+          'focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent focus:bg-surface',
+          'disabled:cursor-not-allowed disabled:bg-muted disabled:opacity-70',
+          error ? 'border-danger' : 'border-input',
           className,
         )}
         {...props}
       />
-      {error && <p className="mt-1.5 text-sm text-red-500">{error}</p>}
+      {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
     </div>
   )
 })
@@ -235,7 +255,7 @@ export function Avatar({ src, name, size = 'md', isOnline, showPresence = false,
           className={cn(
             'absolute bottom-0 right-0 rounded-full ring-2 ring-card',
             DOT_SIZES[size],
-            isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/50',
+            isOnline ? 'bg-success' : 'bg-muted-foreground/50',
           )}
           title={isOnline ? 'Online' : 'Offline'}
         />
@@ -249,7 +269,7 @@ export function PresenceDot({ isOnline, className }) {
     <span
       className={cn(
         'inline-block h-2 w-2 shrink-0 rounded-full',
-        isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/40',
+        isOnline ? 'bg-success' : 'bg-muted-foreground/40',
         className,
       )}
       title={isOnline ? 'Online' : 'Offline'}
@@ -262,7 +282,7 @@ export function PresenceDot({ isOnline, className }) {
 export function Spinner({ className, label = 'Loading' }) {
   return (
     <span role="status" aria-label={label}>
-      <Loader2 className={cn('h-6 w-6 animate-spin text-muted-foreground', className)} />
+      <Loader2 className={cn('icon-lg animate-spin text-muted-foreground', className)} />
     </span>
   )
 }
@@ -275,8 +295,8 @@ export function Badge({ children, variant = 'default', className }) {
   const variants = {
     default: 'bg-muted text-muted-foreground',
     primary: 'bg-primary text-primary-foreground',
-    success: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
-    danger: 'bg-red-500/15 text-red-600 dark:text-red-400',
+    success: 'bg-success-soft text-success ring-1 ring-inset ring-success-border',
+    danger: 'bg-danger-soft text-danger ring-1 ring-inset ring-danger-border',
   }
   return (
     <span
@@ -296,7 +316,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
     <div className={cn('flex flex-col items-center justify-center px-6 py-12 text-center', className)}>
       {Icon && (
         <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-          <Icon className="h-7 w-7 text-muted-foreground" aria-hidden />
+          <Icon className="icon-xl text-muted-foreground" aria-hidden />
         </span>
       )}
       <h3 className="text-base font-semibold text-foreground">{title}</h3>
@@ -351,7 +371,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-scrim backdrop-blur-sm"
             onClick={onClose}
           />
           <motion.div
@@ -363,7 +383,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             className={cn(
-              'relative z-10 flex max-h-[90vh] w-full flex-col rounded-t-2xl border border-border bg-card shadow-2xl sm:rounded-2xl',
+              'glass-strong relative z-10 flex max-h-[90vh] w-full flex-col rounded-t-2xl border shadow-2xl sm:rounded-2xl',
               widths[size],
             )}
           >
@@ -375,7 +395,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
                 )}
               </div>
               <IconButton label="Close" size="sm" onClick={onClose}>
-                <X className="h-5 w-5" />
+                <X className="icon-md" />
               </IconButton>
             </header>
 

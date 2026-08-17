@@ -1,86 +1,300 @@
 @import "tailwindcss";
-body {
-  scroll-behavior: smooth;
-  font-family : 'Poppins', sans-serif;
-}
+
 @custom-variant dark (&:is(.dark *));
 
+/* ---------------------------------------------------------------
+   Typography
+   One family for the whole app. Previously three were declared and
+   none were ever loaded — `body` asked for Poppins, the Tailwind
+   token said Geist, and index.html linked no font at all, so every
+   surface silently fell back to the browser default.
+   'Inter Variable' is the family registered by @fontsource-variable/inter,
+   imported in main.jsx.
+   --------------------------------------------------------------- */
 :root {
-  /* Clean, modern color palette for vibechat */
-  --background: oklch(0.98 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
+  /* The stacks are defined once under their own names, then pointed at by both the
+     app-facing --font-sans/--font-mono and the Tailwind theme tokens below. Naming
+     them separately avoids a self-referential `--font-sans: var(--font-sans)`, which
+     would resolve to nothing the moment Tailwind re-emitted the token. */
+  --font-inter: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono-stack: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono-stack);
+}
+
+html,
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  scroll-behavior: smooth;
+}
+
+/* Inherit everywhere, including third-party markup that sets its own family. */
+*,
+*::before,
+*::after {
+  font-family: inherit;
+}
+
+/* Form controls do not inherit the document font by default — this is what stops
+   inputs, textareas and buttons rendering in the UA's own font. */
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* The blanket inherit above would strip monospace from code, so restore it. */
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}
+
+:root {
+  /*
+   * Light theme.
+   *
+   * Two decisions shape this palette.
+   *
+   * 1. Layered, not flat. The app ground is a soft off-white and cards sit *above*
+   *    it - the reverse of the usual "white cards on a white page", which is what
+   *    made every surface read as one plane with borders drawn on top. Nothing here
+   *    is pure white; the brightest surface is 0.995 and it is reserved for
+   *    elevated things (cards, popovers, dialogs).
+   *
+   * 2. The neutrals carry a trace of the brand hue (258.8) rather than sitting at
+   *    chroma 0. A pure grey beside a blue accent reads as unconsidered and slightly
+   *    dirty; biasing the ramp toward the accent by 0.003-0.012 chroma is well below
+   *    the point where anyone would call it blue, but it makes the greys look chosen
+   *    and lets the accent sit in the page rather than on top of it.
+   */
+
+  /* --- surfaces, lightest to darkest -------------------------------------- */
+  --surface: oklch(0.995 0.002 258.8); /* elevated: cards, popovers, dialogs */
+  --surface-secondary: oklch(0.98 0.003 258.8); /* sidebar, headers, panels */
+  --background: oklch(0.968 0.004 258.8); /* app ground */
+  --field: oklch(0.978 0.003 258.8); /* input fill, recessed into a card */
+  --field-hover: oklch(0.962 0.004 258.8);
+  --muted: oklch(0.945 0.005 258.8); /* fills, hover, skeletons, bubbles */
+
+  /* --- text, strongest to softest ----------------------------------------- */
+  /* Not pure black: it is harsher than the contrast requirement actually needs on
+     an off-white ground, and it flattens everything below it in the hierarchy. */
+  --foreground: oklch(0.225 0.012 258.8);
+  --muted-foreground: oklch(0.5 0.012 258.8); /* secondary text, ~6.5:1 on a card */
+  --subtle-foreground: oklch(0.525 0.012 258.8); /* labels, helper, placeholders */
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--surface-secondary);
+  --secondary-foreground: var(--foreground);
+
+  /* --- lines --------------------------------------------------------------- */
+  --border: oklch(0.905 0.006 258.8); /* structural, deliberately quiet */
+  --border-strong: oklch(0.855 0.008 258.8); /* only where a line must be read */
+  --input: var(--border);
+
+  /* --- brand --------------------------------------------------------------- */
   --primary: oklch(0.48 0.15 258.8);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.145 0 0);
-  --muted: oklch(0.95 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.48 0.15 258.8);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0 0);
-  --input: oklch(0.92 0 0);
-  --ring: oklch(0.48 0.15 258.8);
-  --chart-1: oklch(0.48 0.15 258.8);
+  --primary-foreground: oklch(0.995 0.002 258.8);
+  --accent: var(--primary);
+  --accent-foreground: var(--primary-foreground);
+  --primary-hover: oklch(0.43 0.155 258.8);
+  --primary-active: oklch(0.39 0.16 258.8);
+  --ring: oklch(0.55 0.14 258.8);
+
+  /*
+   * Status. Each state is three values rather than one: a soft ground, a readable
+   * text colour and a border. Saturated fills with white text shout on a calm page;
+   * a tinted ground with strong text carries the same meaning and stays quiet.
+   */
+  --success: oklch(0.48 0.12 155);
+  --success-foreground: oklch(0.995 0.002 258.8);
+  --success-soft: oklch(0.955 0.035 155);
+  --success-border: oklch(0.87 0.06 155);
+
+  --warning: oklch(0.52 0.11 75);
+  --warning-foreground: oklch(0.995 0.002 258.8);
+  --warning-soft: oklch(0.965 0.045 85);
+  --warning-border: oklch(0.88 0.075 80);
+
+  --danger: oklch(0.505 0.18 25.5);
+  --danger-foreground: oklch(0.995 0.002 258.8);
+  --danger-strong: oklch(0.45 0.19 25.5); /* hover for solid danger buttons */
+  --danger-soft: oklch(0.958 0.03 25.5);
+  --danger-border: oklch(0.885 0.06 25.5);
+
+  --info: var(--primary);
+  --info-foreground: var(--primary-foreground);
+  --info-soft: oklch(0.955 0.03 258.8);
+  --info-border: oklch(0.875 0.055 258.8);
+
+  /* Kept: `destructive` is the name the existing components already use. */
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-foreground);
+
+  /*
+   * Elevation. Four levels and no more, tinted with the neutral hue instead of
+   * black - a black shadow over a tinted ground goes grey and muddy. The opacities
+   * stay low on purpose: when everything has a shadow, nothing reads as raised.
+   */
+  --elev-0: 0 0 #0000;
+  --elev-1: 0 1px 2px oklch(0.3 0.02 258.8 / 0.06);
+  --elev-2: 0 1px 2px oklch(0.3 0.02 258.8 / 0.05),
+    0 2px 6px oklch(0.3 0.02 258.8 / 0.06);
+  --elev-3: 0 2px 4px oklch(0.3 0.02 258.8 / 0.04),
+    0 8px 20px oklch(0.3 0.02 258.8 / 0.08);
+  --elev-4: 0 4px 8px oklch(0.3 0.02 258.8 / 0.05),
+    0 20px 48px oklch(0.3 0.02 258.8 / 0.11);
+
+  --radius: 0.625rem;
+
+  --chart-1: var(--primary);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.48 0.15 258.8);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.145 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  --sidebar: var(--surface-secondary);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+
+  /* Glass, applied only to chrome that does not scroll - see the .glass utility.
+     Tinted off the surface token rather than pure white, so glass chrome belongs to
+     the same ramp as everything it floats over. */
+  /* Dialog backdrop. Tinted rather than flat black, which over a warm-neutral
+     ground goes grey and dirty. */
+  --scrim: oklch(0.225 0.012 258.8 / 0.42);
+
+  --glass-bg: oklch(0.995 0.002 258.8 / 0.76);
+  --glass-bg-strong: oklch(0.995 0.002 258.8 / 0.9);
+  --glass-border: oklch(0.225 0.012 258.8 / 0.08);
+  --glass-blur: 16px;
+  --glass-shadow: var(--elev-2);
+  /* Two soft washes so the translucency has something to reveal. */
+  --app-wash-1: oklch(0.48 0.15 258.8 / 0.08);
+  --app-wash-2: oklch(0.6 0.118 184.704 / 0.06);
 }
 
 .dark {
+  /* Dark keeps its existing values. It gains the same token *names* so components
+     can be written against one vocabulary instead of branching on the theme. */
+  --surface: oklch(0.17 0 0);
+  --surface-secondary: oklch(0.15 0 0);
   --background: oklch(0.11 0 0);
-  --foreground: oklch(0.95 0 0);
-  --card: oklch(0.17 0 0);
-  --card-foreground: oklch(0.95 0 0);
-  --popover: oklch(0.11 0 0);
-  --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.58 0.14 258.8);
-  --primary-foreground: oklch(0.11 0 0);
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.95 0 0);
+  --field: oklch(0.16 0 0);
+  --field-hover: oklch(0.19 0 0);
   --muted: oklch(0.22 0 0);
+
+  --foreground: oklch(0.95 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.58 0.14 258.8);
-  --accent-foreground: oklch(0.11 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --subtle-foreground: oklch(0.62 0 0);
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.11 0 0);
+  --popover-foreground: var(--foreground);
+  --secondary: var(--muted);
+  --secondary-foreground: var(--foreground);
+
   --border: oklch(0.22 0 0);
-  --input: oklch(0.22 0 0);
-  --ring: oklch(0.58 0.14 258.8);
-  --chart-1: oklch(0.58 0.14 258.8);
+  --border-strong: oklch(0.32 0 0);
+  --input: var(--border);
+
+  --primary: oklch(0.605 0.14 258.8);
+  --primary-foreground: oklch(0.11 0 0);
+  --accent: var(--primary);
+  --accent-foreground: var(--primary-foreground);
+  --primary-hover: oklch(0.64 0.14 258.8);
+  --primary-active: oklch(0.68 0.13 258.8);
+  --ring: oklch(0.605 0.14 258.8);
+
+  /* Same three-part structure, re-tuned rather than reused: on a dark ground the
+     soft fill has to be lighter than the page and the text lighter still, which is
+     the inverse of the light theme, not the same numbers. */
+  --success: oklch(0.78 0.15 155);
+  --success-foreground: oklch(0.11 0 0);
+  --success-soft: oklch(0.78 0.15 155 / 0.15);
+  --success-border: oklch(0.78 0.15 155 / 0.32);
+
+  --warning: oklch(0.82 0.14 80);
+  --warning-foreground: oklch(0.11 0 0);
+  --warning-soft: oklch(0.82 0.14 80 / 0.15);
+  --warning-border: oklch(0.82 0.14 80 / 0.32);
+
+  --danger: oklch(0.7 0.19 25.5);
+  --danger-foreground: oklch(0.11 0 0);
+  --danger-strong: oklch(0.63 0.2 25.5);
+  --danger-soft: oklch(0.7 0.19 25.5 / 0.15);
+  --danger-border: oklch(0.7 0.19 25.5 / 0.32);
+
+  --info: var(--primary);
+  --info-foreground: var(--primary-foreground);
+  --info-soft: oklch(0.58 0.14 258.8 / 0.16);
+  --info-border: oklch(0.58 0.14 258.8 / 0.34);
+
+  --destructive: var(--danger);
+  --destructive-foreground: var(--danger-foreground);
+
+  /* Shadows do far less work on a dark ground, where separation comes from the
+     surface ramp, so these stay deep and tight instead of being scaled up. */
+  --elev-0: 0 0 #0000;
+  --elev-1: 0 1px 2px oklch(0 0 0 / 0.3);
+  --elev-2: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 6px oklch(0 0 0 / 0.32);
+  --elev-3: 0 2px 4px oklch(0 0 0 / 0.3), 0 8px 20px oklch(0 0 0 / 0.38);
+  --elev-4: 0 4px 8px oklch(0 0 0 / 0.32), 0 20px 48px oklch(0 0 0 / 0.45);
+
+  --chart-1: var(--primary);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.17 0 0);
-  --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.58 0.14 258.8);
-  --sidebar-primary-foreground: oklch(0.95 0 0);
-  --sidebar-accent: oklch(0.22 0 0);
-  --sidebar-accent-foreground: oklch(0.95 0 0);
-  --sidebar-border: oklch(0.22 0 0);
+
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--foreground);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
   --sidebar-ring: oklch(0.439 0 0);
+
+  --scrim: oklch(0 0 0 / 0.6);
+
+  --glass-bg: oklch(0.17 0 0 / 0.66);
+  --glass-bg-strong: oklch(0.17 0 0 / 0.84);
+  --glass-border: oklch(1 0 0 / 0.09);
+  --glass-blur: 16px;
+  --glass-shadow: var(--elev-3);
+  --app-wash-1: oklch(0.58 0.14 258.8 / 0.14);
+  --app-wash-2: oklch(0.696 0.17 162.48 / 0.08);
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
-  --font-poppins: "Poppins", "Poppins Fallback";
+  /* Tailwind's font utilities resolve to the same variables as the base rules
+     above, so `font-sans` and a bare inherited element cannot disagree. The
+     --font-poppins token is gone: it named a font that was never loaded, and every
+     `font-poppins` usage has been removed in favour of plain inheritance. */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono-stack);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -117,6 +331,59 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Surface ramp, exposed so components can name the layer they belong to
+     (bg-surface, bg-surface-secondary, bg-field) instead of borrowing whichever
+     token happened to be the right shade. */
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-field: var(--field);
+  --color-field-hover: var(--field-hover);
+
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-scrim: var(--scrim);
+  --color-border-strong: var(--border-strong);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-success-border: var(--success-border);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-border: var(--warning-border);
+
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-danger-strong: var(--danger-strong);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-border: var(--danger-border);
+
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-info-border: var(--info-border);
+
+  /*
+   * Elevation, wired into Tailwind's own shadow scale.
+   *
+   * This is the reason the components did not need touching: `shadow-sm`,
+   * `shadow-lg`, `shadow-xl` and `shadow-2xl` were already scattered through the
+   * UI, and remapping the scale here replaces every one of them at once with the
+   * restrained system. `inline` matters - it emits `box-shadow: var(--elev-n)`
+   * rather than a resolved value, so the same utility picks up the dark theme's
+   * shadows without a `dark:` variant anywhere.
+   */
+  --shadow-2xs: var(--elev-1);
+  --shadow-xs: var(--elev-1);
+  --shadow-sm: var(--elev-1);
+  --shadow-md: var(--elev-2);
+  --shadow-lg: var(--elev-3);
+  --shadow-xl: var(--elev-3);
+  --shadow-2xl: var(--elev-4);
 }
 
 @layer base {
@@ -127,14 +394,15 @@ body {
     @apply bg-background text-foreground;
   }
 
-  /* Added Poppins font for enhanced typography */
+  /* Headings inherit Inter from html; only the weight is set here. Kept at 700 so
+     existing pages render exactly as before — the family is the only change. */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    @apply font-poppins font-bold;
+    @apply font-bold;
   }
 }
 
@@ -143,10 +411,106 @@ body {
    Added for the chat UI: the landing page did not need any of this.
    --------------------------------------------------------------- */
 
+/* Stacking order, app-wide.
+ *
+ * Every `glass` surface applies backdrop-filter, and backdrop-filter creates a
+ * stacking context. That means a dropdown's own z-index only ranks it *inside* its
+ * glass parent — it cannot lift it above a sibling glass surface. Ranking the
+ * parents is therefore not decoration, it is what makes the child z-indexes work:
+ * the account menu used to disappear behind the sidebar for exactly this reason.
+ *
+ *   10   message composer
+ *   20   sidebar aside, settings header
+ *   30   chat header            (hosts the conversation menu)
+ *   40   icon rail              (hosts the account menu)
+ *   50   modals and confirmations
+ *   60   image lightbox
+ *  100   toasts
+ *
+ * Overlays that must clear all chrome are mounted at the shell root, not inside a
+ * pane, so their `fixed` positioning is not captured by a ranked ancestor.
+ */
+
+@property --app-wash-1 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+@property --app-wash-2 {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
 @layer base {
   html {
     /* The chat shell manages its own scrolling regions. */
     height: 100%;
+
+    /* An explicit ground on the root, not only on <body>. Without it the body
+       background propagates to the canvas, and the canvas is repainted straight
+       away when `color-scheme` flips — a hard flash behind a body that is still
+       mid-fade. Painting the root stops the propagation. */
+    background-color: var(--background);
+  }
+
+  /* Two soft washes behind everything, so the glass chrome has something to
+     refract instead of sitting on a flat fill. Painted once — the body itself does
+     not scroll inside the app shell. */
+  body {
+    background-image:
+      radial-gradient(60rem 40rem at 12% -10%, var(--app-wash-1), transparent 60%),
+      radial-gradient(50rem 36rem at 105% 8%, var(--app-wash-2), transparent 62%);
+    background-repeat: no-repeat;
+  }
+
+  /* Theme change: a brief, global colour cross-fade.
+     Applied as a transient class rather than a permanent `* { transition }` rule.
+     Without it only interactive elements animated (from the rule below) while every
+     surface snapped instantly, which read as a doubled, staggered transition. The
+     class is removed once the fade is done, so nothing pays for it during ordinary
+     use, and only paint-only properties are listed so it cannot cause layout work. */
+  html.theme-transition {
+    transition-property: background-color, box-shadow, --app-wash-1, --app-wash-2;
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    /* `opacity` and `transform` are here for one reason: this selector outranks the
+       utility classes on the theme-toggle glyphs, so omitting them cancelled the
+       icon's own cross-fade for exactly the 180ms the rest of the page was fading —
+       the icon snapped while everything else eased. Both are compositor-only.
+
+       `box-shadow` joined them once the elevation scale became genuinely different
+       between the themes: light shadows are tinted and soft, dark ones deep and
+       tight, so leaving it out meant every card's shadow jumped in one frame while
+       its colours eased over 180ms. One element changing instantly in the middle of
+       a smooth fade is exactly what reads as a blink. */
+    transition-property: background-color, border-color, color, fill, stroke, opacity,
+      transform, box-shadow;
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-delay: 0s;
+  }
+
+  /* Narrow, short transitions on interactive elements only. Deliberately not
+     `transition: all`, which animates layout properties and is a common source of
+     jank; these four are all compositor- or paint-only. */
+  button,
+  a,
+  [role='button'],
+  [role='menuitem'],
+  input,
+  textarea,
+  select {
+    transition-property: background-color, border-color, color, box-shadow, opacity, transform;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Thin, theme-aware scrollbars so the message list and sidebars do not get a
@@ -193,6 +557,227 @@ body {
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/* ---------------------------------------------------------------
+   Icon scale
+   Five steps, chosen by the icon's ROLE rather than per call site.
+   Sizing icons ad hoc is what produced seven different values across
+   the app, so the same control looked bigger in one place than
+   another. Naming the roles means a size can only change in one place.
+
+     icon-xs  14px  inline with running text: delivery ticks, the
+                    connection banner, a glyph inside a small badge
+     icon-sm  16px  paired with a text label: buttons with text, menu
+                    items, attachment cards
+     icon-md  20px  input adornments and small standalone buttons
+                    (32px target): clear-search, dismiss, modal close
+     icon-lg  24px  primary standalone chrome (40px target): back,
+                    menu, theme, settings, nav, composer, new group
+     icon-xl  28px  feature marks: empty states, splash screen, large
+                    placeholders
+
+   Control pairing: Button and IconButton share one scale —
+   sm 32px / md 40px / lg 44px. A 40px IconButton takes icon-lg; a
+   Button with text takes icon-sm. Keeping the glyph at roughly 60% of
+   its target is what stops a control reading as oversized.
+   --------------------------------------------------------------- */
+@utility icon-xs {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+@utility icon-sm {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+@utility icon-md {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+@utility icon-lg {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+@utility icon-xl {
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------
+   Glass surfaces
+
+   backdrop-filter is the most expensive thing on this page, so it is
+   deliberately limited to chrome that does NOT scroll: the rail,
+   panel headers, the composer, modals, dropdowns and toasts. Message
+   bubbles, list rows and the scroll containers themselves stay opaque
+   — blurring a scrolling surface forces the compositor to re-sample
+   the backdrop every frame, which is exactly what makes a "glassy" UI
+   feel laggy.
+   --------------------------------------------------------------- */
+/* ------------------------------------------------------------- splash mark
+
+   The animated "V" shown while the app starts. Written as CSS keyframes rather
+   than driven from JavaScript: this loops for as long as the screen is up, and a
+   JS-driven loop would keep re-rendering a component whose only job is to wait.
+   Everything animated here is opacity, transform or stroke-dashoffset, so the work
+   stays off the main thread.
+
+   The stroke is normalised with `pathLength="1"` on the path, which is what makes
+   the trace seamless: the dash pattern sums to exactly one path length, so the
+   light leaves the end of the stroke at the same instant it re-enters the start
+   and there is no visible seam at the loop point. */
+
+@keyframes vibe-mark-trace {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Deliberately slower than the trace, and not a multiple of it — the two cycles
+   drift against each other, so the mark never looks like it is ticking. */
+@keyframes vibe-mark-breathe {
+  0%,
+  100% {
+    transform: scale(0.985) rotate(-0.5deg);
+  }
+  50% {
+    transform: scale(1.015) rotate(0.5deg);
+  }
+}
+
+@keyframes vibe-mark-glow {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.92);
+  }
+  45% {
+    opacity: 0.48;
+    transform: scale(1.12);
+  }
+}
+
+.vibe-mark-trace {
+  stroke-dasharray: 0.34 0.66;
+  animation: vibe-mark-trace 1.8s linear infinite;
+  /* Soft, not neon: one short-radius shadow in the stroke's own colour. */
+  filter: drop-shadow(0 0 5px currentColor);
+}
+
+.vibe-mark-breathe {
+  animation: vibe-mark-breathe 5.4s ease-in-out infinite;
+}
+
+.vibe-mark-glow {
+  animation: vibe-mark-glow 1.8s ease-in-out infinite;
+}
+
+/* Reduced motion keeps the mark, drops the movement — the V still reads as the
+   brand, it simply sits still and lit rather than being traced. */
+@media (prefers-reduced-motion: reduce) {
+  .vibe-mark-trace {
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+    opacity: 0.85;
+  }
+
+  .vibe-mark-trace,
+  .vibe-mark-breathe,
+  .vibe-mark-glow {
+    animation: none;
+  }
+
+  .vibe-mark-glow {
+    opacity: 0.28;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------- landing page
+
+   Scoped to the public landing screen. Kept out of the component files because it
+   is presentational chrome the app itself never renders. */
+
+/* Faint grid, sized in rem so it does not swim when the page is zoomed. The lines
+   are drawn from the foreground token at very low alpha rather than a fixed grey,
+   so the texture keeps the same relationship to the ground in either palette. */
+@utility landing-grid {
+  background-image:
+    linear-gradient(to right, var(--glass-border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--glass-border) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+}
+
+/* Typing indicator inside the product preview. Three dots on one keyframe with
+   staggered delays — cheaper than three animations, and the only thing looping on
+   the page besides the presence pulse. */
+@keyframes landing-typing {
+  0%,
+  70%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-0.15rem);
+  }
+}
+
+.landing-typing-dot {
+  animation: landing-typing 1.25s ease-in-out infinite;
+}
+
+/* Motion here is decoration, so it is dropped entirely rather than shortened. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-typing-dot {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+@utility glass {
+  background-color: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border-color: var(--glass-border);
+}
+
+@utility glass-strong {
+  background-color: var(--glass-bg-strong);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border-color: var(--glass-border);
+}
+
+/* Without support, or when the viewer asks for less transparency, fall back to a
+   solid surface rather than leaving chrome see-through and unreadable. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .glass-strong {
+    background-color: var(--card);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-strong {
+    background-color: var(--card);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
   }
 }
 

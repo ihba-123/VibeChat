@@ -10,7 +10,7 @@ export default function Footer() {
 
   return (
     <>
-      <section id="cta" className="py-16 md:py-20 lg:py-32 px-4 sm:px-6 lg:px-8">
+      <section id="cta" className="scroll-mt-24 py-16 md:py-20 lg:py-32 px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -22,7 +22,7 @@ export default function Footer() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-poppins font-bold text-foreground mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4"
           >
             Ready to connect?
           </motion.h2>
@@ -30,7 +30,7 @@ export default function Footer() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-base sm:text-lg text-foreground/60 mb-8 max-w-2xl mx-auto font-light"
+            className="text-base sm:text-lg text-foreground/60 mb-8 max-w-2xl mx-auto font-normal"
           >
             Join thousands of users enjoying vibechat today. Start your first conversation now.
           </motion.p>
@@ -41,7 +41,7 @@ export default function Footer() {
             whileInView={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
             onClick={() => navigate(isAuthenticated ? "/app" : "/register")}
-            className="px-6 sm:px-10 py-3 sm:py-4 bg-primary text-primary-foreground rounded-full font-poppins font-bold text-base sm:text-lg hover:shadow-lg transition-shadow"
+            className="px-6 sm:px-10 py-3 sm:py-4 bg-primary text-primary-foreground rounded-full font-bold text-base sm:text-lg hover:shadow-lg transition-shadow"
           >
             {isAuthenticated ? "Open VibeChat" : "Start Now"}
           </motion.button>
@@ -59,25 +59,25 @@ export default function Footer() {
             {/* Brand section */}
             <div className="col-span-2 sm:col-span-1">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8  flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
                   <MessageCircleCode />
                 </div>
-                <span className="text-lg sm:text-xl font-poppins font-bold text-foreground">vibechat</span>
+                <span className="text-lg sm:text-xl font-bold text-foreground">vibechat</span>
               </div>
-              <p className="text-foreground/60 text-xs sm:text-sm font-light">
+              <p className="text-foreground/60 text-xs sm:text-sm font-normal">
                 Modern messaging platform for real connections
               </p>
             </div>
 
             {/* Product links */}
             <div>
-              <h4 className="font-poppins font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">Product</h4>
+              <h4 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">Product</h4>
               <ul className="space-y-2">
                 {["Features", "Security", "Pricing", "Roadmap"].map((link) => (
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-foreground/60 hover:text-primary text-xs sm:text-sm transition-colors font-light"
+                      className="text-foreground/60 hover:text-primary text-xs sm:text-sm transition-colors font-normal"
                     >
                       {link}
                     </a>
@@ -88,13 +88,13 @@ export default function Footer() {
 
             {/* Company links */}
             <div>
-              <h4 className="font-poppins font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">Company</h4>
+              <h4 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">Company</h4>
               <ul className="space-y-2">
                 {["About", "Blog", "Careers", "Contact"].map((link) => (
                   <li key={link}>
                     <a
                       href="#"
-                      className="text-foreground/60 hover:text-primary text-xs sm:text-sm transition-colors font-light"
+                      className="text-foreground/60 hover:text-primary text-xs sm:text-sm transition-colors font-normal"
                     >
                       {link}
                     </a>
@@ -105,7 +105,7 @@ export default function Footer() {
 
             {/* Social links */}
             <div>
-              <h4 className="font-poppins font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">Connect</h4>
+              <h4 className="font-semibold text-foreground mb-3 sm:mb-4 text-sm sm:text-base">Connect</h4>
               <div className="flex gap-2 sm:gap-4">
                 <motion.a
                   whileHover={{ scale: 1.1 }}
@@ -138,7 +138,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="border-t border-border pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-foreground/60 font-light">
+          <div className="border-t border-border pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs sm:text-sm text-foreground/60 font-normal">
             <p className="text-center sm:text-left">© 2025 vibechat. All rights reserved.</p>
             <div className="flex flex-wrap justify-center sm:justify-end gap-4 sm:gap-6">
               <a href="#" className="hover:text-primary transition-colors">

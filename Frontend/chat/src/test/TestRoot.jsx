@@ -11,6 +11,7 @@ import { BrowserRouter } from 'react-router-dom'
 
 import App from '../App'
 import AuthProvider from '../auth/AuthProvider'
+import ConfirmProvider from '../components/ConfirmDialog'
 import ToastProvider from '../components/Toaster'
 import RealtimeProvider from '../realtime/RealtimeProvider'
 
@@ -30,11 +31,13 @@ export default function TestRoot() {
       <BrowserRouter>
         <QueryClientProvider client={queryClient}>
           <ToastProvider>
-            <AuthProvider>
-              <RealtimeProvider>
-                <App />
-              </RealtimeProvider>
-            </AuthProvider>
+            <ConfirmProvider>
+              <AuthProvider>
+                <RealtimeProvider>
+                  <App />
+                </RealtimeProvider>
+              </AuthProvider>
+            </ConfirmProvider>
           </ToastProvider>
         </QueryClientProvider>
       </BrowserRouter>

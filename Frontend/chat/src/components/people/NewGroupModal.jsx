@@ -170,7 +170,7 @@ export default function NewGroupModal({ open, onClose, onCreated }) {
                         : 'border-border',
                     )}
                   >
-                    {isSelected && <Check className="h-3 w-3" />}
+                    {isSelected && <Check className="icon-xs" />}
                   </span>
                 </button>
               )
@@ -178,7 +178,7 @@ export default function NewGroupModal({ open, onClose, onCreated }) {
           )}
         </div>
 
-        {error && selected.length === 0 && <p className="text-sm text-red-500">{error}</p>}
+        {error && selected.length === 0 && <p className="text-sm text-danger">{error}</p>}
       </div>
     </Modal>
   )

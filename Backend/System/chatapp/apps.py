@@ -10,3 +10,6 @@ class ChatappConfig(AppConfig):
         # This used to sit at module level, outside the class, so it never ran and
         # new users were created without a Profile.
         from . import signals  # noqa: F401
+
+        # Registers the configuration checks (see chatapp/checks.py).
+        from . import checks  # noqa: F401

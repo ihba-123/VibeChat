@@ -16,22 +16,25 @@ def refresh_access_token_service(refresh_token):
     Returns ``(data, status_code)``.
     """
     if not refresh_token:
-        return {'error': 'Refresh token not found in cookies.'}, 401
+        # Definitive: the browser sent no refresh cookie.
+        return {'error': 'No session.', 'code': 'no_session'}, 401
 
     try:
         token = RefreshToken(refresh_token)
     except TokenError:
-        # Expired, malformed, or already blacklisted: the client must sign in again.
-        return {'error': 'Session expired. Please sign in again.'}, 401
+        # Expired, malformed, or already blacklisted — the last of which also covers
+        # a tab that lost a rotation race. Not definitive, so it is reported
+        # separately from 'no cookie present'.
+        return {'error': 'Session expired. Please sign in again.', 'code': 'session_expired'}, 401
 
     user_id = token.payload.get(jwt_settings.USER_ID_CLAIM)
     if not user_id:
-        return {'error': 'Invalid token payload.'}, 401
+        return {'error': 'Invalid token payload.', 'code': 'session_expired'}, 401
 
     try:
         user = User.objects.get(**{jwt_settings.USER_ID_FIELD: user_id}, is_active=True)
     except User.DoesNotExist:
-        return {'error': 'User not found.'}, 401
+        return {'error': 'User not found.', 'code': 'no_session'}, 401
 
     if not settings.SIMPLE_JWT.get('ROTATE_REFRESH_TOKENS', False):
         return {'access': str(token.access_token), 'user': user}, 200
