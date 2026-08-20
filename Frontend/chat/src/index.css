@@ -192,6 +192,14 @@ samp {
   /* Two soft washes so the translucency has something to reveal. */
   --app-wash-1: oklch(0.48 0.15 258.8 / 0.08);
   --app-wash-2: oklch(0.6 0.118 184.704 / 0.06);
+
+  /* Chat pane texture. The line carries the primary hue rather than a neutral, and
+     the two glows are the app washes at roughly double strength — the pane paints
+     an opaque ground over the body washes, so it has to supply its own colour. */
+  --chat-grid-line: oklch(0.48 0.15 258.8 / 0.2);
+  --chat-glow-1: oklch(0.48 0.15 258.8 / 0.16);
+  --chat-glow-2: oklch(0.6 0.118 184.704 / 0.13);
+  --chat-doodle-ink: oklch(0.48 0.15 258.8 / 0.17);
 }
 
 .dark {
@@ -286,6 +294,13 @@ samp {
   --glass-shadow: var(--elev-3);
   --app-wash-1: oklch(0.58 0.14 258.8 / 0.14);
   --app-wash-2: oklch(0.696 0.17 162.48 / 0.08);
+
+  /* Dark carries more alpha: the same line over a near-black ground reads far
+     fainter than it does over the light one. */
+  --chat-grid-line: oklch(0.605 0.14 258.8 / 0.28);
+  --chat-glow-1: oklch(0.58 0.14 258.8 / 0.26);
+  --chat-glow-2: oklch(0.696 0.17 162.48 / 0.16);
+  --chat-doodle-ink: oklch(0.605 0.14 258.8 / 0.3);
 }
 
 @theme inline {
@@ -719,6 +734,37 @@ samp {
     linear-gradient(to right, var(--glass-border) 1px, transparent 1px),
     linear-gradient(to bottom, var(--glass-border) 1px, transparent 1px);
   background-size: 4rem 4rem;
+}
+
+/* ------------------------------------------------------------------- chat pane
+
+   Same 4rem geometry as the landing grid, drawn in the primary hue instead of the
+   neutral border token. The layer that uses this is blurred, which is the whole
+   point: the boxes should be legible as structure without ever resolving into
+   hard lines behind the conversation. The alpha here looks high for a background
+   because the blur spreads a 1px line over several pixels and drops its peak to a
+   fraction of what is set — read it together with the blur, not on its own. */
+@utility chat-grid {
+  background-image:
+    linear-gradient(to right, var(--chat-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--chat-grid-line) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+}
+
+/* Telegram-style doodle wallpaper: flat outline line-art, densely packed. The SVG is
+   applied as a mask rather than an image, so the ink is a theme token and the whole
+   pattern recolours with the palette — a baked-in grey would go muddy against one
+   ground or the other, and this way the doodles stay a tint of the app's own blue in
+   both. Dark carries more alpha, since a line over near-black reads far fainter than
+   the same line over white. */
+@utility chat-doodles {
+  background-color: var(--chat-doodle-ink);
+  mask-image: url('./assets/chat-doodles.svg');
+  mask-size: 34rem 34rem;
+  mask-repeat: repeat;
+  -webkit-mask-image: url('./assets/chat-doodles.svg');
+  -webkit-mask-size: 34rem 34rem;
+  -webkit-mask-repeat: repeat;
 }
 
 /* Typing indicator inside the product preview. Three dots on one keyframe with

@@ -335,10 +335,35 @@ export default function AppShell() {
           </aside>
         )}
 
-        {/* Main pane */}
+        {/* Main pane. The landing page's line grid — softened, tinted with the primary
+            hue and lit from two corners — over a tiling doodle wallpaper, so the
+            conversation sits on the product's texture rather than a flat panel. It
+            runs the full height of the pane: the chat header and the composer are both
+            transparent, so the texture carries through them rather than stopping at
+            the conversation and leaving those two strips looking flat. */}
         {showMain && (
-          <main className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
-            <Outlet context={{ onViewProfile: setProfileUserId, openConversation }} />
+          <main className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-background">
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 overflow-hidden"
+            >
+              {/* Colour first, so the grid is lit by it rather than sitting on top. */}
+              <div
+                className="absolute -left-32 -top-40 h-[38rem] w-[38rem] rounded-full blur-3xl"
+                style={{ background: 'radial-gradient(closest-side, var(--chat-glow-1), transparent)' }}
+              />
+              <div
+                className="absolute -right-40 -bottom-32 h-[36rem] w-[36rem] rounded-full blur-3xl"
+                style={{ background: 'radial-gradient(closest-side, var(--chat-glow-2), transparent)' }}
+              />
+              <div className="chat-doodles absolute inset-0" />
+              {/* Blurred on purpose — the boxes should read as structure, never as
+                  hard rules competing with the message bubbles. */}
+              <div className="chat-grid absolute -inset-4 blur-[3px]" />
+            </div>
+            <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
+              <Outlet context={{ onViewProfile: setProfileUserId, openConversation }} />
+            </div>
           </main>
         )}
       </div>

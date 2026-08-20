@@ -1,0 +1,666 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="640" height="640">
+  <!-- Doodle wallpaper tile for the chat pane. Documented in index.css (chat-doodles).
+
+       Outline line-art only: no fills, no shading. The pattern is used as a CSS mask,
+       so the ink is a theme token and only the alpha of these strokes matters —
+       whatever colour is painted here comes out as flat ink.
+
+       Two size classes, packed the way this kind of wallpaper actually reads: larger
+       motifs scattered first, then small fillers (paws, dots, sparkles, spirals)
+       dropped into the gaps between them, so there is no dead space and no lattice.
+       Stroke width is set per <use> as 1.8/scale, which cancels the scale transform
+       and keeps every line the same weight whether the motif is large or tiny.
+
+       Placement is generated with torus-wrapped spacing, so motifs that straddle a
+       tile edge live in #edge, which is stamped at all eight neighbouring offsets and
+       makes the tiling seamless. -->
+  <defs>
+    <g id="d-cat">
+      <path d="M-7 17c-7 0-11-5-9-11 1-4 3-6 3-9 0-3-1-5-1-8 0-2 2-2 3-1l3 4c3-1 6-1 9 0l3-4c1-1 3-1 3 1 0 3-1 5-1 8 0 3 2 5 3 9 2 6-2 11-9 11z"/>
+      <path d="M-4-4v2M4-4v2"/>
+      <path d="M-2 2h4"/>
+      <path d="M8 17c6 0 8-5 5-9"/>
+    </g>
+    <g id="d-dog">
+      <path d="M-8 17c-6 0-9-4-8-9 1-5 3-7 3-11 0-5 4-8 9-8 4 0 7 2 8 6 1 3 3 5 3 9 0 5-3 8-8 8z"/>
+      <path d="M-9-6c-4 1-5 5-4 9 1 3 3 4 5 4"/>
+      <path d="M3-7v2"/>
+      <path d="M9-1c1 1 2 1 3 0"/>
+      <path d="M11 6c4 0 5-3 4-6"/>
+    </g>
+    <g id="d-catface">
+      <circle cx="0" cy="0" r="11"/>
+      <path d="M-9-6-11-15l7 5M9-6l2-9-7 5"/>
+      <path d="M-4-1v2M4-1v2"/>
+      <path d="M-3 4a3 3 0 0 0 6 0"/>
+      <path d="M-15 2h5M-15 6h5M15 2h-5M15 6h-5"/>
+    </g>
+    <g id="d-paw">
+      <ellipse cx="0" cy="4" rx="6" ry="5"/>
+      <ellipse cx="-6.5" cy="-4" rx="2.4" ry="3"/>
+      <ellipse cx="-1.5" cy="-7" rx="2.4" ry="3"/>
+      <ellipse cx="3.5" cy="-6.5" rx="2.4" ry="3"/>
+      <ellipse cx="7.5" cy="-2" rx="2.2" ry="2.8"/>
+    </g>
+    <g id="d-bone">
+      <path d="M-9-4h18M-9 4h18"/>
+      <circle cx="-11" cy="-4" r="4"/><circle cx="-11" cy="4" r="4"/>
+      <circle cx="11" cy="-4" r="4"/><circle cx="11" cy="4" r="4"/>
+    </g>
+    <g id="d-fish">
+      <path d="M-14 0c5-7 15-7 20 0-5 7-15 7-20 0z"/>
+      <path d="M6 0 14-5v10z"/>
+      <circle cx="-7" cy="-1" r="1.2"/>
+      <path d="M-2-4c2 2 2 6 0 8"/>
+    </g>
+    <g id="d-fishbone">
+      <path d="M-11 0h19"/>
+      <path d="M-7-5-3 0-7 5M-1-6 3 0-1 6M5-5 9 0 5 5"/>
+      <path d="M8 0 14-4v8z"/>
+      <circle cx="-12" cy="0" r="3.2"/>
+    </g>
+    <g id="d-ball">
+      <circle cx="0" cy="0" r="10"/>
+      <path d="M-10 0h20"/>
+      <path d="M0-10a8 10 0 0 0 0 20M0-10a8 10 0 0 1 0 20"/>
+    </g>
+    <g id="d-yarn">
+      <circle cx="0" cy="0" r="9"/>
+      <path d="M-8-4c5 3 9 7 11 12M-4-8c4 2 8 6 10 11M2-9c3 2 5 5 6 8"/>
+      <path d="M9 4c4 1 6 4 5 8"/>
+    </g>
+    <g id="d-house">
+      <path d="M-12 14V0l12-9 12 9v14z"/>
+      <path d="M-4 14V7a4 4 0 0 1 8 0v7"/>
+    </g>
+    <g id="d-cloud">
+      <path d="M-14 9a8 8 0 0 1 1-16 11 11 0 0 1 20-2 7 7 0 0 1 1 18z"/>
+    </g>
+    <g id="d-balloon">
+      <path d="M0-16a11 13 0 0 1 0 26 11 13 0 0 1 0-26z"/>
+      <path d="M-3 10h6l-3 3z"/>
+      <path d="M0 13c0 5-5 4-5 8"/>
+    </g>
+    <g id="d-plane">
+      <path d="M-17 3 17-13 5 17 0 6z"/>
+      <path d="M-17 3 5 6"/>
+    </g>
+    <g id="d-heart">
+      <path d="M0 14C-13 5-17-5-10-11c5-4 10 0 10 4 0-4 5-8 10-4 7 6 3 16-10 25z"/>
+    </g>
+    <g id="d-star">
+      <path d="M0-13 3.8-4.2 13-3.8 5.9 1.8 8 11.1 0 6.1-8 11.1-5.9 1.8-13-3.8-3.8-4.2z"/>
+    </g>
+    <g id="d-bubble">
+      <path d="M-15-11h30a4 4 0 0 1 4 4v12a4 4 0 0 1-4 4h-16l-8 8v-8h-6a4 4 0 0 1-4-4V-7a4 4 0 0 1 4-4z"/>
+      <path d="M-8-2h14M-8 3h8"/>
+    </g>
+    <g id="d-note">
+      <path d="M-3 11V-11l14-4V7"/>
+      <ellipse cx="-7" cy="11" rx="5" ry="4"/>
+      <ellipse cx="7" cy="7" rx="5" ry="4"/>
+    </g>
+    <g id="d-bird">
+      <path d="M-10 2c0-5 4-8 8-8 3 0 5 1 6 3l7-2-3 4 4 2-7 2c-1 3-4 5-7 5-5 0-8-3-8-6z"/>
+      <circle cx="-4" cy="-2" r="1"/>
+      <path d="M-5 8-6 12M1 8l1 4"/>
+    </g>
+    <g id="d-bowl">
+      <path d="M-12-2h24l-3 9a4 4 0 0 1-4 3h-10a4 4 0 0 1-4-3z"/>
+      <ellipse cx="0" cy="-2" rx="12" ry="3"/>
+      <path d="M-6-4c2-2 4-2 6 0 2-2 4-2 6 0"/>
+    </g>
+    <g id="d-gift">
+      <path d="M-11-4h22v15h-22z"/>
+      <path d="M-13-9h26v5h-26z"/>
+      <path d="M0-9v20"/>
+      <path d="M0-9c-5-1-7-6-3-7s4 5 3 7zM0-9c5-1 7-6 3-7s-4 5-3 7z"/>
+    </g>
+    <g id="d-moon">
+      <path d="M5-13a13 13 0 1 0 8 21 11 11 0 0 1-8-21z"/>
+      <path d="M13-10v5M10.5-7.5h5"/>
+    </g>
+    <g id="d-collar">
+      <ellipse cx="0" cy="0" rx="11" ry="8"/>
+      <ellipse cx="0" cy="0" rx="7.5" ry="5"/>
+      <path d="M0 8v4"/>
+      <circle cx="0" cy="14" r="2.6"/>
+    </g>
+    <g id="d-envelope">
+      <path d="M-12-8h24v16h-24z"/>
+      <path d="M-12-8 0 2l12-10"/>
+    </g>
+    <g id="d-spiral">
+      <path d="M2 0a2 2 0 1 0-2 2 4 4 0 0 0 4-4 6 6 0 0 0-6-6 8 8 0 0 0-8 8"/>
+    </g>
+    <g id="d-sparkle">
+      <path d="M0-7c1 4 2 5 6 7-4 2-5 3-6 7-1-4-2-5-6-7 4-2 5-3 6-7z"/>
+    </g>
+    <g id="d-dot">
+      <circle cx="0" cy="0" r="2.4"/>
+    </g>
+    <g id="d-squiggle">
+      <path d="M-9 3c3-6 6 4 9-2s6 2 9-4"/>
+    </g>
+
+    <!-- Doodles clear of every seam: drawn once. -->
+    <g id="core">
+      <use href="#d-plane" transform="translate(159.4 450.2) rotate(38) scale(1.0)" stroke-width="1.8"/>
+      <use href="#d-bubble" transform="translate(403.9 482.5) rotate(32) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-plane" transform="translate(265.1 503.7) rotate(-16) scale(1.14)" stroke-width="1.58"/>
+      <use href="#d-house" transform="translate(213.4 261.3) rotate(-32) scale(1.12)" stroke-width="1.61"/>
+      <use href="#d-star" transform="translate(210.4 334.4) rotate(11) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-heart" transform="translate(28.8 531.5) rotate(-1) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-note" transform="translate(274.1 183.7) rotate(-31) scale(1.02)" stroke-width="1.76"/>
+      <use href="#d-collar" transform="translate(391.1 439.3) rotate(-34) scale(1.08)" stroke-width="1.67"/>
+      <use href="#d-ball" transform="translate(118.8 118.9) rotate(-21) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-cat" transform="translate(187.8 138.3) rotate(12) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-gift" transform="translate(480.4 316.4) rotate(-39) scale(0.94)" stroke-width="1.91"/>
+      <use href="#d-gift" transform="translate(463.3 352.4) rotate(-15) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-envelope" transform="translate(500.0 68.1) rotate(26) scale(1.02)" stroke-width="1.76"/>
+      <use href="#d-catface" transform="translate(394.0 302.9) rotate(15) scale(1.07)" stroke-width="1.68"/>
+      <use href="#d-plane" transform="translate(462.2 280.1) rotate(-40) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-heart" transform="translate(163.1 544.7) rotate(-37) scale(1.07)" stroke-width="1.68"/>
+      <use href="#d-envelope" transform="translate(261.3 313.3) rotate(-8) scale(1.06)" stroke-width="1.7"/>
+      <use href="#d-fish" transform="translate(387.4 101.0) rotate(-17) scale(1.03)" stroke-width="1.75"/>
+      <use href="#d-bone" transform="translate(569.1 538.4) rotate(3) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-dog" transform="translate(439.6 32.0) rotate(16) scale(1.14)" stroke-width="1.58"/>
+      <use href="#d-cloud" transform="translate(117.9 593.2) rotate(-16) scale(1.03)" stroke-width="1.75"/>
+      <use href="#d-house" transform="translate(388.3 563.9) rotate(5) scale(1.03)" stroke-width="1.75"/>
+      <use href="#d-fishbone" transform="translate(351.4 134.7) rotate(21) scale(1.11)" stroke-width="1.62"/>
+      <use href="#d-fishbone" transform="translate(292.9 72.1) rotate(32) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-dog" transform="translate(597.2 238.0) rotate(-4) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-fish" transform="translate(558.7 366.8) rotate(-38) scale(1.04)" stroke-width="1.73"/>
+      <use href="#d-gift" transform="translate(539.2 194.3) rotate(5) scale(0.97)" stroke-width="1.86"/>
+      <use href="#d-collar" transform="translate(194.8 396.9) rotate(7) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-plane" transform="translate(244.5 400.0) rotate(-17) scale(1.04)" stroke-width="1.73"/>
+      <use href="#d-bird" transform="translate(621.6 163.2) rotate(-38) scale(1.13)" stroke-width="1.59"/>
+      <use href="#d-dog" transform="translate(516.7 271.5) rotate(-26) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-fishbone" transform="translate(63.9 334.6) rotate(3) scale(1.14)" stroke-width="1.58"/>
+      <use href="#d-catface" transform="translate(149.3 37.0) rotate(23) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-ball" transform="translate(147.8 624.1) rotate(12) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-star" transform="translate(578.3 488.5) rotate(40) scale(1.08)" stroke-width="1.67"/>
+      <use href="#d-fish" transform="translate(445.2 190.5) rotate(-32) scale(0.99)" stroke-width="1.82"/>
+      <use href="#d-bowl" transform="translate(31.1 357.3) rotate(-15) scale(1.09)" stroke-width="1.65"/>
+      <use href="#d-star" transform="translate(76.8 520.2) rotate(37) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-plane" transform="translate(474.3 583.8) rotate(-1) scale(0.99)" stroke-width="1.82"/>
+      <use href="#d-gift" transform="translate(17.2 107.4) rotate(-37) scale(1.08)" stroke-width="1.67"/>
+      <use href="#d-yarn" transform="translate(345.5 217.1) rotate(0) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-balloon" transform="translate(619.4 34.1) rotate(26) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-bird" transform="translate(619.3 501.0) rotate(32) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-house" transform="translate(400.2 58.1) rotate(-37) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-catface" transform="translate(413.6 393.3) rotate(15) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-dog" transform="translate(339.3 30.7) rotate(10) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-note" transform="translate(414.7 346.5) rotate(35) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-catface" transform="translate(170.1 217.4) rotate(21) scale(1.07)" stroke-width="1.68"/>
+      <use href="#d-gift" transform="translate(301.0 485.6) rotate(10) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-catface" transform="translate(354.3 76.5) rotate(9) scale(1.08)" stroke-width="1.67"/>
+      <use href="#d-catface" transform="translate(162.9 369.8) rotate(-26) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-bird" transform="translate(322.7 370.7) rotate(-1) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-fish" transform="translate(64.6 476.6) rotate(-5) scale(1.02)" stroke-width="1.76"/>
+      <use href="#d-note" transform="translate(599.7 298.8) rotate(24) scale(1.07)" stroke-width="1.68"/>
+      <use href="#d-plane" transform="translate(291.4 605.1) rotate(-4) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-cloud" transform="translate(328.9 534.9) rotate(-33) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-bird" transform="translate(305.0 248.4) rotate(-12) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-gift" transform="translate(176.5 74.9) rotate(-37) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-fish" transform="translate(452.6 147.6) rotate(-9) scale(0.99)" stroke-width="1.82"/>
+      <use href="#d-balloon" transform="translate(533.1 425.4) rotate(-40) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-bird" transform="translate(575.9 109.1) rotate(12) scale(1.09)" stroke-width="1.65"/>
+      <use href="#d-gift" transform="translate(308.9 319.7) rotate(16) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-collar" transform="translate(454.3 504.7) rotate(2) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-bird" transform="translate(302.7 136.9) rotate(-32) scale(1.0)" stroke-width="1.8"/>
+      <use href="#d-collar" transform="translate(585.7 412.2) rotate(3) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-catface" transform="translate(434.9 553.7) rotate(0) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-bone" transform="translate(164.0 324.0) rotate(32) scale(1.07)" stroke-width="1.68"/>
+      <use href="#d-yarn" transform="translate(557.4 60.1) rotate(-40) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-cat" transform="translate(41.9 25.7) rotate(21) scale(1.12)" stroke-width="1.61"/>
+      <use href="#d-ball" transform="translate(345.8 263.9) rotate(4) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-ball" transform="translate(52.0 605.0) rotate(-13) scale(1.08)" stroke-width="1.67"/>
+      <use href="#d-yarn" transform="translate(182.1 593.7) rotate(-21) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-plane" transform="translate(484.3 177.0) rotate(15) scale(1.04)" stroke-width="1.73"/>
+      <use href="#d-cat" transform="translate(614.0 586.8) rotate(7) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-collar" transform="translate(57.2 230.6) rotate(33) scale(1.14)" stroke-width="1.58"/>
+      <use href="#d-star" transform="translate(380.7 164.7) rotate(-13) scale(1.01)" stroke-width="1.78"/>
+      <use href="#d-yarn" transform="translate(615.2 624.3) rotate(2) scale(1.09)" stroke-width="1.65"/>
+      <use href="#d-cloud" transform="translate(83.3 86.3) rotate(18) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-envelope" transform="translate(156.8 507.8) rotate(-25) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-cloud" transform="translate(489.7 545.4) rotate(-37) scale(1.0)" stroke-width="1.8"/>
+      <use href="#d-bowl" transform="translate(241.1 354.6) rotate(35) scale(0.97)" stroke-width="1.86"/>
+      <use href="#d-yarn" transform="translate(87.6 562.0) rotate(17) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-house" transform="translate(50.1 280.6) rotate(16) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-moon" transform="translate(224.4 62.8) rotate(15) scale(1.13)" stroke-width="1.59"/>
+      <use href="#d-ball" transform="translate(526.8 116.7) rotate(22) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-star" transform="translate(97.3 162.4) rotate(-39) scale(1.0)" stroke-width="1.8"/>
+      <use href="#d-star" transform="translate(608.4 526.7) rotate(-6) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-house" transform="translate(438.3 244.1) rotate(28) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-bubble" transform="translate(100.9 279.7) rotate(4) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-fish" transform="translate(351.1 508.5) rotate(-29) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-collar" transform="translate(313.9 97.4) rotate(38) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-heart" transform="translate(223.1 611.8) rotate(20) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-balloon" transform="translate(267.3 37.9) rotate(-3) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-ball" transform="translate(224.3 574.1) rotate(-36) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-catface" transform="translate(348.1 402.3) rotate(-34) scale(1.09)" stroke-width="1.65"/>
+      <use href="#d-note" transform="translate(319.7 185.0) rotate(-31) scale(1.09)" stroke-width="1.65"/>
+      <use href="#d-fish" transform="translate(59.5 546.1) rotate(18) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-fishbone" transform="translate(313.8 448.3) rotate(-14) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-note" transform="translate(225.3 467.8) rotate(6) scale(1.03)" stroke-width="1.75"/>
+      <use href="#d-catface" transform="translate(389.8 217.8) rotate(-30) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-fish" transform="translate(459.2 97.5) rotate(4) scale(1.03)" stroke-width="1.75"/>
+      <use href="#d-gift" transform="translate(413.5 149.6) rotate(4) scale(0.96)" stroke-width="1.88"/>
+      <use href="#d-heart" transform="translate(612.9 465.1) rotate(19) scale(0.99)" stroke-width="1.82"/>
+      <use href="#d-yarn" transform="translate(517.6 233.1) rotate(-6) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-bone" transform="translate(340.9 303.1) rotate(-38) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-fish" transform="translate(507.3 612.1) rotate(-2) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-balloon" transform="translate(214.1 207.2) rotate(-24) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-yarn" transform="translate(149.4 92.6) rotate(-28) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-moon" transform="translate(247.4 220.9) rotate(-30) scale(0.99)" stroke-width="1.82"/>
+      <use href="#d-bubble" transform="translate(59.8 181.8) rotate(-23) scale(1.08)" stroke-width="1.67"/>
+      <use href="#d-star" transform="translate(482.3 448.9) rotate(-21) scale(0.96)" stroke-width="1.88"/>
+      <use href="#d-cat" transform="translate(103.6 378.7) rotate(-12) scale(0.94)" stroke-width="1.91"/>
+      <use href="#d-fish" transform="translate(92.8 425.9) rotate(-3) scale(1.07)" stroke-width="1.68"/>
+      <use href="#d-fishbone" transform="translate(494.6 374.1) rotate(34) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-fishbone" transform="translate(23.5 578.3) rotate(-18) scale(0.96)" stroke-width="1.88"/>
+      <use href="#d-ball" transform="translate(79.8 31.5) rotate(-9) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-bubble" transform="translate(495.5 128.9) rotate(24) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-moon" transform="translate(209.6 541.7) rotate(34) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-star" transform="translate(236.6 100.5) rotate(7) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-note" transform="translate(571.9 319.3) rotate(-28) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-heart" transform="translate(506.1 491.3) rotate(32) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-yarn" transform="translate(447.2 459.8) rotate(-35) scale(1.0)" stroke-width="1.8"/>
+      <use href="#d-star" transform="translate(139.3 258.0) rotate(5) scale(1.14)" stroke-width="1.58"/>
+      <use href="#d-gift" transform="translate(537.0 558.8) rotate(17) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-star" transform="translate(130.1 221.7) rotate(-35) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-moon" transform="translate(100.8 486.2) rotate(-39) scale(1.05)" stroke-width="1.71"/>
+      <use href="#d-house" transform="translate(20.6 396.0) rotate(-11) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-bowl" transform="translate(302.2 400.9) rotate(-6) scale(1.11)" stroke-width="1.62"/>
+      <use href="#d-bird" transform="translate(373.2 368.0) rotate(-5) scale(0.96)" stroke-width="1.88"/>
+      <use href="#d-bubble" transform="translate(337.8 581.9) rotate(-37) scale(1.14)" stroke-width="1.58"/>
+      <use href="#d-envelope" transform="translate(41.1 439.6) rotate(32) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-balloon" transform="translate(261.7 440.2) rotate(-12) scale(1.1)" stroke-width="1.64"/>
+      <use href="#d-bone" transform="translate(65.0 128.2) rotate(-38) scale(1.12)" stroke-width="1.61"/>
+      <use href="#d-yarn" transform="translate(205.2 439.2) rotate(-4) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-bone" transform="translate(148.3 139.9) rotate(2) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-heart" transform="translate(293.4 537.6) rotate(9) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-plane" transform="translate(364.1 331.8) rotate(34) scale(0.8)" stroke-width="2.25"/>
+      <use href="#d-ball" transform="translate(604.3 134.6) rotate(20) scale(1.04)" stroke-width="1.73"/>
+      <use href="#d-star" transform="translate(449.7 417.4) rotate(4) scale(0.97)" stroke-width="1.86"/>
+      <use href="#d-bone" transform="translate(271.3 108.1) rotate(-21) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-fishbone" transform="translate(375.8 603.2) rotate(2) scale(1.12)" stroke-width="1.61"/>
+      <use href="#d-bird" transform="translate(571.8 27.7) rotate(-10) scale(1.01)" stroke-width="1.78"/>
+      <use href="#d-star" transform="translate(619.2 404.1) rotate(-36) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-cat" transform="translate(526.0 338.0) rotate(-40) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-cat" transform="translate(110.1 54.5) rotate(-33) scale(1.03)" stroke-width="1.75"/>
+      <use href="#d-bird" transform="translate(272.5 274.1) rotate(9) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-fish" transform="translate(571.2 163.6) rotate(10) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-star" transform="translate(66.8 377.6) rotate(-13) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-yarn" transform="translate(111.1 243.6) rotate(21) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-house" transform="translate(261.9 546.9) rotate(-22) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-plane" transform="translate(162.5 408.7) rotate(36) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-ball" transform="translate(531.4 148.5) rotate(-7) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-ball" transform="translate(605.7 80.9) rotate(7) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-ball" transform="translate(101.0 328.2) rotate(10) scale(1.03)" stroke-width="1.75"/>
+      <use href="#d-cloud" transform="translate(518.6 23.7) rotate(38) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-house" transform="translate(395.4 526.1) rotate(-13) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-star" transform="translate(478.1 402.1) rotate(25) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-yarn" transform="translate(475.8 213.9) rotate(1) scale(1.01)" stroke-width="1.78"/>
+      <use href="#d-moon" transform="translate(249.7 147.1) rotate(-4) scale(1.11)" stroke-width="1.62"/>
+      <use href="#d-envelope" transform="translate(110.4 530.3) rotate(-27) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-collar" transform="translate(350.5 448.3) rotate(-40) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-gift" transform="translate(18.2 150.2) rotate(-30) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-bowl" transform="translate(539.1 502.0) rotate(-27) scale(1.0)" stroke-width="1.8"/>
+      <use href="#d-yarn" transform="translate(463.7 623.2) rotate(20) scale(1.06)" stroke-width="1.7"/>
+      <use href="#d-yarn" transform="translate(365.6 240.1) rotate(-19) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-envelope" transform="translate(550.5 459.3) rotate(9) scale(1.1)" stroke-width="1.64"/>
+      <use href="#d-envelope" transform="translate(565.4 590.0) rotate(-1) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-yarn" transform="translate(388.3 265.2) rotate(20) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-yarn" transform="translate(559.5 261.2) rotate(39) scale(1.02)" stroke-width="1.76"/>
+      <use href="#d-balloon" transform="translate(126.2 306.0) rotate(-27) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-ball" transform="translate(585.8 196.7) rotate(-9) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-moon" transform="translate(207.9 500.2) rotate(37) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-heart" transform="translate(184.2 33.0) rotate(-5) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-gift" transform="translate(127.9 179.7) rotate(-18) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-bird" transform="translate(275.5 244.5) rotate(-11) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-bird" transform="translate(233.6 24.6) rotate(-17) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-gift" transform="translate(222.7 300.0) rotate(1) scale(0.96)" stroke-width="1.88"/>
+      <use href="#d-yarn" transform="translate(297.4 22.3) rotate(16) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-heart" transform="translate(129.1 419.6) rotate(20) scale(1.01)" stroke-width="1.78"/>
+      <use href="#d-yarn" transform="translate(430.8 591.9) rotate(-39) scale(0.93)" stroke-width="1.94"/>
+      <use href="#d-ball" transform="translate(420.8 94.9) rotate(-16) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-bone" transform="translate(431.1 305.1) rotate(-7) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-heart" transform="translate(175.6 254.7) rotate(-30) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-ball" transform="translate(43.7 80.1) rotate(35) scale(1.0)" stroke-width="1.8"/>
+      <use href="#d-yarn" transform="translate(483.8 17.9) rotate(15) scale(1.07)" stroke-width="1.68"/>
+      <use href="#d-moon" transform="translate(96.7 204.5) rotate(-25) scale(0.85)" stroke-width="2.12"/>
+      <use href="#d-fish" transform="translate(162.8 173.7) rotate(26) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-envelope" transform="translate(207.7 95.5) rotate(6) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-ball" transform="translate(430.3 122.8) rotate(-13) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-bird" transform="translate(32.7 496.5) rotate(11) scale(1.06)" stroke-width="1.7"/>
+      <use href="#d-ball" transform="translate(35.7 310.5) rotate(16) scale(0.94)" stroke-width="1.91"/>
+      <use href="#d-bird" transform="translate(286.1 361.3) rotate(11) scale(1.14)" stroke-width="1.58"/>
+      <use href="#d-star" transform="translate(534.2 88.0) rotate(-39) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-star" transform="translate(52.0 410.1) rotate(-1) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-yarn" transform="translate(588.6 610.1) rotate(7) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-fishbone" transform="translate(554.9 294.2) rotate(-9) scale(0.8)" stroke-width="2.25"/>
+      <use href="#d-note" transform="translate(309.0 282.4) rotate(6) scale(0.89)" stroke-width="2.02"/>
+      <use href="#d-fishbone" transform="translate(204.3 365.7) rotate(-21) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-bowl" transform="translate(360.5 542.0) rotate(4) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-envelope" transform="translate(555.6 229.5) rotate(-36) scale(0.96)" stroke-width="1.88"/>
+      <use href="#d-star" transform="translate(602.7 331.5) rotate(2) scale(0.88)" stroke-width="2.05"/>
+      <use href="#d-envelope" transform="translate(408.9 183.7) rotate(34) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-heart" transform="translate(528.2 386.8) rotate(35) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-bone" transform="translate(213.3 172.3) rotate(12) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-fish" transform="translate(167.0 285.9) rotate(36) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-bowl" transform="translate(512.4 458.1) rotate(0) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-yarn" transform="translate(607.5 433.4) rotate(-35) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-bird" transform="translate(256.7 602.8) rotate(-13) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-ball" transform="translate(150.3 578.0) rotate(14) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-yarn" transform="translate(285.3 214.2) rotate(-35) scale(0.95)" stroke-width="1.89"/>
+      <use href="#d-ball" transform="translate(192.5 466.2) rotate(-30) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-heart" transform="translate(120.1 453.4) rotate(9) scale(0.97)" stroke-width="1.86"/>
+      <use href="#d-ball" transform="translate(589.8 56.0) rotate(-5) scale(0.92)" stroke-width="1.96"/>
+      <use href="#d-yarn" transform="translate(527.0 53.3) rotate(20) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-heart" transform="translate(288.1 568.3) rotate(17) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-bird" transform="translate(478.5 246.6) rotate(13) scale(1.04)" stroke-width="1.73"/>
+      <use href="#d-ball" transform="translate(183.5 518.3) rotate(33) scale(0.96)" stroke-width="1.88"/>
+      <use href="#d-yarn" transform="translate(519.7 528.8) rotate(38) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-ball" transform="translate(127.0 341.3) rotate(-24) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-bird" transform="translate(422.5 510.9) rotate(40) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-fish" transform="translate(622.4 108.4) rotate(27) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-paw" transform="translate(181.6 570.0) rotate(-28) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(339.7 476.0) rotate(-26) scale(0.6)" stroke-width="3.0"/>
+      <use href="#d-paw" transform="translate(137.4 367.1) rotate(1) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-paw" transform="translate(433.2 276.7) rotate(-17) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-paw" transform="translate(457.3 388.8) rotate(21) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-paw" transform="translate(479.5 483.9) rotate(4) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-squiggle" transform="translate(323.3 505.5) rotate(-16) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(4.0 517.1) rotate(-25) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-star" transform="translate(68.0 584.9) rotate(-18) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-dot" transform="translate(432.5 210.8) rotate(4) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(366.9 195.6) rotate(-19) scale(0.55)" stroke-width="3.27"/>
+      <use href="#d-paw" transform="translate(64.0 66.6) rotate(28) scale(0.56)" stroke-width="3.21"/>
+      <use href="#d-sparkle" transform="translate(74.0 298.5) rotate(-23) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-paw" transform="translate(484.4 501.8) rotate(32) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-star" transform="translate(84.2 610.6) rotate(-9) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-paw" transform="translate(94.4 228.8) rotate(18) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-star" transform="translate(417.2 224.7) rotate(18) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-sparkle" transform="translate(339.3 163.4) rotate(30) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-dot" transform="translate(394.1 135.3) rotate(20) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-paw" transform="translate(250.6 578.5) rotate(-35) scale(0.51)" stroke-width="3.53"/>
+      <use href="#d-paw" transform="translate(327.6 152.1) rotate(0) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-dot" transform="translate(191.2 189.6) rotate(25) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-dot" transform="translate(548.7 31.9) rotate(-33) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-heart" transform="translate(466.9 60.6) rotate(-29) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(312.4 159.5) rotate(26) scale(0.56)" stroke-width="3.21"/>
+      <use href="#d-dot" transform="translate(629.3 191.3) rotate(-33) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-paw" transform="translate(115.1 90.4) rotate(-1) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-paw" transform="translate(225.4 430.2) rotate(-29) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-sparkle" transform="translate(349.6 361.3) rotate(20) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-squiggle" transform="translate(93.6 132.5) rotate(-33) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-sparkle" transform="translate(65.6 436.3) rotate(39) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-squiggle" transform="translate(512.8 208.4) rotate(36) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-paw" transform="translate(596.9 9.2) rotate(20) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(491.7 281.9) rotate(38) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-dot" transform="translate(377.0 506.6) rotate(-23) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-sparkle" transform="translate(600.6 209.9) rotate(-21) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-heart" transform="translate(617.3 212.9) rotate(-39) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-sparkle" transform="translate(240.7 529.7) rotate(-40) scale(0.56)" stroke-width="3.21"/>
+      <use href="#d-squiggle" transform="translate(61.9 504.2) rotate(-29) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-sparkle" transform="translate(366.4 485.7) rotate(-2) scale(0.56)" stroke-width="3.21"/>
+      <use href="#d-squiggle" transform="translate(576.3 438.9) rotate(-23) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-dot" transform="translate(193.0 300.0) rotate(-27) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-paw" transform="translate(585.2 514.0) rotate(18) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-spiral" transform="translate(279.3 133.3) rotate(3) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-dot" transform="translate(75.6 260.8) rotate(-9) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-spiral" transform="translate(185.9 167.6) rotate(32) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-sparkle" transform="translate(252.9 250.3) rotate(29) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-heart" transform="translate(169.6 109.7) rotate(-25) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-sparkle" transform="translate(250.1 280.0) rotate(33) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-paw" transform="translate(410.1 585.9) rotate(-33) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(479.2 48.3) rotate(-3) scale(0.6)" stroke-width="3.0"/>
+      <use href="#d-dot" transform="translate(559.1 89.4) rotate(-34) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-heart" transform="translate(561.1 422.7) rotate(-29) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-paw" transform="translate(578.3 347.1) rotate(2) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-squiggle" transform="translate(290.0 163.8) rotate(12) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-sparkle" transform="translate(197.2 566.3) rotate(17) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-paw" transform="translate(137.5 531.8) rotate(-11) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-paw" transform="translate(378.2 409.9) rotate(20) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-dot" transform="translate(508.9 162.2) rotate(-27) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-spiral" transform="translate(569.2 209.1) rotate(35) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-sparkle" transform="translate(52.4 516.1) rotate(37) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-squiggle" transform="translate(310.1 514.3) rotate(10) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-paw" transform="translate(136.5 491.8) rotate(-1) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-sparkle" transform="translate(17.6 61.0) rotate(22) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(584.4 270.2) rotate(-18) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-sparkle" transform="translate(566.4 392.3) rotate(-5) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(507.4 311.3) rotate(3) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(401.8 24.2) rotate(-19) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(609.3 550.9) rotate(-3) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-paw" transform="translate(446.5 327.4) rotate(3) scale(0.56)" stroke-width="3.21"/>
+      <use href="#d-heart" transform="translate(350.1 183.4) rotate(-25) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-sparkle" transform="translate(351.5 107.6) rotate(3) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-dot" transform="translate(414.9 267.2) rotate(-7) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-paw" transform="translate(499.8 220.4) rotate(-22) scale(0.51)" stroke-width="3.53"/>
+      <use href="#d-squiggle" transform="translate(328.5 232.1) rotate(-14) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-paw" transform="translate(247.0 624.6) rotate(-9) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(186.5 348.0) rotate(-15) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-dot" transform="translate(57.0 308.1) rotate(-26) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-spiral" transform="translate(131.6 546.2) rotate(27) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-sparkle" transform="translate(507.6 431.6) rotate(24) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-squiggle" transform="translate(244.3 192.7) rotate(38) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-squiggle" transform="translate(228.2 124.0) rotate(15) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-paw" transform="translate(597.4 389.1) rotate(36) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-dot" transform="translate(89.5 249.6) rotate(-36) scale(0.56)" stroke-width="3.21"/>
+      <use href="#d-star" transform="translate(492.0 344.6) rotate(13) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-dot" transform="translate(469.3 42.5) rotate(-33) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-sparkle" transform="translate(15.1 303.1) rotate(-3) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-paw" transform="translate(174.2 636.0) rotate(-13) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-squiggle" transform="translate(105.7 620.9) rotate(15) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-star" transform="translate(153.7 479.9) rotate(-19) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-paw" transform="translate(501.6 515.7) rotate(13) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-paw" transform="translate(258.8 470.3) rotate(-13) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-dot" transform="translate(239.6 551.8) rotate(28) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-spiral" transform="translate(405.9 242.7) rotate(-15) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-paw" transform="translate(488.3 631.4) rotate(-33) scale(0.5)" stroke-width="3.6"/>
+      <use href="#d-dot" transform="translate(353.6 285.0) rotate(18) scale(0.55)" stroke-width="3.27"/>
+      <use href="#d-paw" transform="translate(582.6 79.1) rotate(17) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(380.4 38.0) rotate(-29) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-paw" transform="translate(32.0 628.6) rotate(3) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-paw" transform="translate(502.9 571.7) rotate(18) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-spiral" transform="translate(25.7 176.9) rotate(-24) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-sparkle" transform="translate(244.0 263.4) rotate(22) scale(0.54)" stroke-width="3.33"/>
+      <use href="#d-paw" transform="translate(285.9 301.8) rotate(8) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-dot" transform="translate(116.4 140.1) rotate(-12) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-paw" transform="translate(144.7 66.6) rotate(-8) scale(0.51)" stroke-width="3.53"/>
+      <use href="#d-spiral" transform="translate(88.8 461.0) rotate(5) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-dot" transform="translate(497.2 202.9) rotate(-27) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(467.8 466.9) rotate(-22) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-paw" transform="translate(157.7 11.1) rotate(27) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-dot" transform="translate(517.1 98.5) rotate(-4) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-dot" transform="translate(582.5 455.0) rotate(-20) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-heart" transform="translate(113.3 562.7) rotate(-12) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-heart" transform="translate(497.5 99.8) rotate(16) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-sparkle" transform="translate(329.0 485.4) rotate(-8) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-dot" transform="translate(22.9 73.5) rotate(4) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-paw" transform="translate(433.1 368.8) rotate(32) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-squiggle" transform="translate(280.9 467.6) rotate(-36) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-dot" transform="translate(603.2 485.0) rotate(-9) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-dot" transform="translate(172.6 494.0) rotate(-30) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-dot" transform="translate(526.1 365.6) rotate(27) scale(0.5)" stroke-width="3.6"/>
+      <use href="#d-dot" transform="translate(314.2 348.3) rotate(-10) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-dot" transform="translate(459.5 537.4) rotate(0) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-paw" transform="translate(216.8 414.5) rotate(8) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-heart" transform="translate(335.3 345.5) rotate(-34) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(142.0 355.0) rotate(-13) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-paw" transform="translate(353.7 621.3) rotate(16) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-spiral" transform="translate(325.8 426.9) rotate(4) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(528.7 593.5) rotate(5) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-paw" transform="translate(626.8 273.4) rotate(29) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(264.9 76.9) rotate(4) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(369.5 286.3) rotate(6) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-sparkle" transform="translate(607.4 195.8) rotate(5) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-sparkle" transform="translate(634.5 421.1) rotate(-18) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(288.5 329.4) rotate(-29) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-spiral" transform="translate(291.2 430.5) rotate(23) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-sparkle" transform="translate(168.4 620.4) rotate(8) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-dot" transform="translate(546.6 166.4) rotate(30) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-sparkle" transform="translate(370.3 422.7) rotate(-3) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-sparkle" transform="translate(467.7 527.6) rotate(-10) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-paw" transform="translate(321.6 215.9) rotate(20) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-spiral" transform="translate(273.9 392.6) rotate(-6) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-sparkle" transform="translate(579.0 385.6) rotate(13) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(620.9 57.5) rotate(-24) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-dot" transform="translate(103.8 183.9) rotate(-11) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-sparkle" transform="translate(138.6 111.4) rotate(14) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(323.2 71.4) rotate(26) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-paw" transform="translate(551.5 124.8) rotate(-13) scale(0.54)" stroke-width="3.33"/>
+      <use href="#d-dot" transform="translate(138.6 379.3) rotate(-39) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-dot" transform="translate(535.3 310.4) rotate(2) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-paw" transform="translate(185.1 619.4) rotate(-21) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(35.0 130.3) rotate(-23) scale(0.6)" stroke-width="3.0"/>
+      <use href="#d-dot" transform="translate(446.1 220.1) rotate(28) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-dot" transform="translate(528.2 166.3) rotate(0) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-spiral" transform="translate(369.1 467.2) rotate(-18) scale(0.57)" stroke-width="3.16"/>
+      <use href="#d-sparkle" transform="translate(420.4 208.3) rotate(-38) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-paw" transform="translate(611.6 268.6) rotate(4) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(175.3 428.5) rotate(3) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-dot" transform="translate(92.4 624.3) rotate(-20) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-sparkle" transform="translate(424.2 418.7) rotate(-25) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-squiggle" transform="translate(222.5 519.7) rotate(30) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-dot" transform="translate(438.4 71.2) rotate(-29) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-dot" transform="translate(124.7 475.6) rotate(-14) scale(0.5)" stroke-width="3.6"/>
+      <use href="#d-dot" transform="translate(17.9 478.3) rotate(-19) scale(0.6)" stroke-width="3.0"/>
+      <use href="#d-paw" transform="translate(594.3 557.9) rotate(-3) scale(0.54)" stroke-width="3.33"/>
+      <use href="#d-paw" transform="translate(434.6 486.9) rotate(13) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-dot" transform="translate(558.0 562.9) rotate(12) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-dot" transform="translate(154.2 193.3) rotate(-16) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-paw" transform="translate(305.8 48.7) rotate(-29) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-squiggle" transform="translate(159.2 602.3) rotate(29) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-paw" transform="translate(401.4 369.6) rotate(40) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-dot" transform="translate(335.8 465.8) rotate(-37) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-spiral" transform="translate(125.8 623.0) rotate(-37) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-spiral" transform="translate(191.2 314.7) rotate(28) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-dot" transform="translate(553.8 398.3) rotate(-6) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-fish" transform="translate(507.4 408.0) rotate(-31) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-sparkle" transform="translate(5.2 30.6) rotate(28) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(37.2 254.7) rotate(-13) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-sparkle" transform="translate(573.2 564.0) rotate(-39) scale(0.56)" stroke-width="3.21"/>
+      <use href="#d-dot" transform="translate(587.3 356.1) rotate(-29) scale(0.54)" stroke-width="3.33"/>
+      <use href="#d-sparkle" transform="translate(86.3 590.1) rotate(9) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-dot" transform="translate(228.5 506.1) rotate(38) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-star" transform="translate(128.4 510.2) rotate(-40) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-sparkle" transform="translate(431.0 432.4) rotate(10) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(342.2 245.8) rotate(-19) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(170.7 576.4) rotate(23) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-dot" transform="translate(33.4 166.0) rotate(-22) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-dot" transform="translate(368.8 53.9) rotate(1) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-star" transform="translate(628.9 300.0) rotate(-17) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-dot" transform="translate(317.7 63.7) rotate(23) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-squiggle" transform="translate(442.1 611.6) rotate(-14) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-star" transform="translate(586.5 633.1) rotate(19) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-dot" transform="translate(250.2 11.5) rotate(40) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-squiggle" transform="translate(208.2 34.0) rotate(35) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-spiral" transform="translate(559.2 140.4) rotate(-22) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-paw" transform="translate(123.6 151.0) rotate(4) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-dot" transform="translate(37.0 470.9) rotate(35) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-dot" transform="translate(24.3 293.6) rotate(24) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(591.3 178.6) rotate(-22) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-squiggle" transform="translate(333.2 113.1) rotate(24) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-spiral" transform="translate(389.6 349.8) rotate(3) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(515.2 583.1) rotate(36) scale(0.6)" stroke-width="3.0"/>
+      <use href="#d-sparkle" transform="translate(356.0 163.8) rotate(11) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-sparkle" transform="translate(266.3 64.7) rotate(-28) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-sparkle" transform="translate(456.8 480.0) rotate(-11) scale(0.39)" stroke-width="4.62"/>
+      <use href="#d-dot" transform="translate(168.3 53.3) rotate(-5) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-sparkle" transform="translate(307.5 224.2) rotate(-14) scale(0.5)" stroke-width="3.6"/>
+      <use href="#d-dot" transform="translate(191.2 54.8) rotate(-19) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(417.6 530.2) rotate(-28) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-paw" transform="translate(290.3 45.9) rotate(-20) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-sparkle" transform="translate(548.5 316.7) rotate(28) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-dot" transform="translate(565.2 192.3) rotate(39) scale(0.54)" stroke-width="3.33"/>
+      <use href="#d-dot" transform="translate(437.9 339.3) rotate(-12) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(202.7 580.6) rotate(5) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(263.8 582.8) rotate(-4) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-paw" transform="translate(379.0 392.3) rotate(-20) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-squiggle" transform="translate(138.4 5.3) rotate(-10) scale(0.41)" stroke-width="4.39"/>
+      <use href="#d-paw" transform="translate(517.5 176.6) rotate(-32) scale(0.51)" stroke-width="3.53"/>
+      <use href="#d-dot" transform="translate(44.2 104.1) rotate(-26) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(272.8 409.3) rotate(-34) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-dot" transform="translate(493.5 42.2) rotate(-33) scale(0.58)" stroke-width="3.1"/>
+      <use href="#d-paw" transform="translate(494.0 294.0) rotate(11) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-spiral" transform="translate(440.7 636.4) rotate(16) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-sparkle" transform="translate(396.4 412.1) rotate(14) scale(0.38)" stroke-width="4.74"/>
+      <use href="#d-paw" transform="translate(423.9 457.8) rotate(-7) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-dot" transform="translate(386.6 125.6) rotate(9) scale(0.51)" stroke-width="3.53"/>
+      <use href="#d-paw" transform="translate(52.4 629.1) rotate(14) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-paw" transform="translate(265.5 342.5) rotate(-28) scale(0.5)" stroke-width="3.6"/>
+      <use href="#d-dot" transform="translate(81.1 447.7) rotate(9) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-dot" transform="translate(307.1 552.8) rotate(27) scale(0.52)" stroke-width="3.46"/>
+      <use href="#d-squiggle" transform="translate(42.3 154.7) rotate(-39) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-dot" transform="translate(588.4 528.4) rotate(-17) scale(0.4)" stroke-width="4.5"/>
+      <use href="#d-spiral" transform="translate(221.8 146.9) rotate(-2) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-dot" transform="translate(106.6 348.9) rotate(-34) scale(0.55)" stroke-width="3.27"/>
+      <use href="#d-dot" transform="translate(344.4 611.6) rotate(-6) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-sparkle" transform="translate(235.9 327.5) rotate(28) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-spiral" transform="translate(392.9 333.9) rotate(35) scale(0.47)" stroke-width="3.83"/>
+      <use href="#d-paw" transform="translate(52.2 571.7) rotate(-36) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-dot" transform="translate(377.8 478.0) rotate(1) scale(0.45)" stroke-width="4.0"/>
+      <use href="#d-dot" transform="translate(379.9 188.0) rotate(-23) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-squiggle" transform="translate(171.4 478.5) rotate(21) scale(0.36)" stroke-width="5.0"/>
+      <use href="#d-paw" transform="translate(183.2 97.9) rotate(31) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-dot" transform="translate(68.8 49.7) rotate(36) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-paw" transform="translate(86.9 305.7) rotate(22) scale(0.43)" stroke-width="4.19"/>
+      <use href="#d-squiggle" transform="translate(132.7 78.7) rotate(-20) scale(0.35)" stroke-width="5.14"/>
+      <use href="#d-dot" transform="translate(9.3 185.8) rotate(25) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-sparkle" transform="translate(620.7 257.0) rotate(-19) scale(0.5)" stroke-width="3.6"/>
+      <use href="#d-dot" transform="translate(449.3 528.9) rotate(-28) scale(0.54)" stroke-width="3.33"/>
+      <use href="#d-dot" transform="translate(225.4 377.0) rotate(16) scale(0.48)" stroke-width="3.75"/>
+      <use href="#d-dot" transform="translate(335.0 96.6) rotate(-33) scale(0.59)" stroke-width="3.05"/>
+      <use href="#d-dot" transform="translate(188.1 286.8) rotate(26) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-spiral" transform="translate(576.5 137.4) rotate(-15) scale(0.44)" stroke-width="4.09"/>
+      <use href="#d-dot" transform="translate(511.9 563.9) rotate(-28) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-dot" transform="translate(329.2 331.5) rotate(-37) scale(0.46)" stroke-width="3.91"/>
+      <use href="#d-dot" transform="translate(595.3 163.7) rotate(6) scale(0.53)" stroke-width="3.4"/>
+      <use href="#d-dot" transform="translate(386.2 627.9) rotate(31) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-sparkle" transform="translate(405.8 125.2) rotate(31) scale(0.36)" stroke-width="5.0"/>
+    </g>
+
+    <!-- Doodles that straddle a tile edge: stamped at all nine offsets below. -->
+    <g id="edge">
+      <use href="#d-catface" transform="translate(7.4 448.4) rotate(-34) scale(0.94)" stroke-width="1.91"/>
+      <use href="#d-dog" transform="translate(552.6 631.1) rotate(-18) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-yarn" transform="translate(198.2 1.3) rotate(-27) scale(1.15)" stroke-width="1.57"/>
+      <use href="#d-bird" transform="translate(0.6 329.9) rotate(1) scale(0.91)" stroke-width="1.98"/>
+      <use href="#d-fish" transform="translate(369.1 7.0) rotate(25) scale(0.98)" stroke-width="1.84"/>
+      <use href="#d-ball" transform="translate(5.8 284.2) rotate(37) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-balloon" transform="translate(413.0 625.2) rotate(20) scale(1.08)" stroke-width="1.67"/>
+      <use href="#d-catface" transform="translate(621.1 363.2) rotate(15) scale(1.13)" stroke-width="1.59"/>
+      <use href="#d-envelope" transform="translate(76.5 2.9) rotate(38) scale(0.81)" stroke-width="2.22"/>
+      <use href="#d-bone" transform="translate(9.2 208.8) rotate(35) scale(0.86)" stroke-width="2.09"/>
+      <use href="#d-dog" transform="translate(8.2 246.7) rotate(2) scale(0.87)" stroke-width="2.07"/>
+      <use href="#d-ball" transform="translate(633.5 73.9) rotate(37) scale(1.05)" stroke-width="1.71"/>
+      <use href="#d-balloon" transform="translate(11.3 615.7) rotate(-13) scale(0.83)" stroke-width="2.17"/>
+      <use href="#d-ball" transform="translate(639.0 483.2) rotate(-22) scale(0.8)" stroke-width="2.25"/>
+      <use href="#d-bowl" transform="translate(5.5 8.0) rotate(9) scale(0.82)" stroke-width="2.2"/>
+      <use href="#d-cloud" transform="translate(323.0 632.8) rotate(-37) scale(0.99)" stroke-width="1.82"/>
+      <use href="#d-bowl" transform="translate(112.8 4.4) rotate(-21) scale(0.84)" stroke-width="2.14"/>
+      <use href="#d-bird" transform="translate(274.7 0.2) rotate(-6) scale(1.04)" stroke-width="1.73"/>
+      <use href="#d-bowl" transform="translate(635.0 549.4) rotate(-40) scale(0.9)" stroke-width="2.0"/>
+      <use href="#d-paw" transform="translate(230.0 2.7) rotate(-16) scale(0.49)" stroke-width="3.67"/>
+      <use href="#d-dot" transform="translate(0.1 128.0) rotate(39) scale(0.37)" stroke-width="4.86"/>
+      <use href="#d-dot" transform="translate(0.9 503.1) rotate(24) scale(0.42)" stroke-width="4.29"/>
+      <use href="#d-sparkle" transform="translate(2.4 52.0) rotate(-38) scale(0.5)" stroke-width="3.6"/>
+    </g>
+  </defs>
+  <g fill="none" stroke="#000" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#core"/>
+    <use href="#edge"/>
+    <use href="#edge" transform="translate(-640 0)"/>
+    <use href="#edge" transform="translate(640 0)"/>
+    <use href="#edge" transform="translate(0 -640)"/>
+    <use href="#edge" transform="translate(0 640)"/>
+    <use href="#edge" transform="translate(-640 -640)"/>
+    <use href="#edge" transform="translate(640 -640)"/>
+    <use href="#edge" transform="translate(-640 640)"/>
+    <use href="#edge" transform="translate(640 640)"/>
+  </g>
+</svg>
