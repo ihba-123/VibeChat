@@ -2,7 +2,7 @@ import { ShieldOff } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 
-import ChatHeader from '../components/chat/ChatHeader'
+import ChatHeader, { HEADER_INSET } from '../components/chat/ChatHeader'
 import { useConfirm } from '../components/ConfirmDialog'
 import ImageLightbox from '../components/chat/ImageLightbox'
 import MessageComposer from '../components/chat/MessageComposer'
@@ -136,7 +136,9 @@ export default function ChatRoom() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    // relative: the chat header floats over the list, and this is its
+    // containing block.
+    <div className="relative flex h-full min-h-0 flex-col">
       <ChatHeader
         conversation={conversation}
         isOnline={otherUserId ? isOnline(otherUserId) || conversation?.is_online : undefined}
@@ -192,6 +194,7 @@ export default function ChatRoom() {
         onDiscard={discardMessage}
         onOpenImage={setLightboxSrc}
         typingNames={typingNames}
+        topInset={HEADER_INSET}
       />
 
       <MessageComposer

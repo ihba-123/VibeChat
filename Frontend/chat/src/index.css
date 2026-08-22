@@ -189,6 +189,18 @@ samp {
   --glass-border: oklch(0.225 0.012 258.8 / 0.08);
   --glass-blur: 16px;
   --glass-shadow: var(--elev-2);
+
+  /* Crystal glass — the floating chat header. Much clearer than --glass-bg, so
+     more of the conversation shows through, and the filter compensates: a pane
+     this transparent goes flat and milky-grey without the extra saturation, and
+     the brightness lift is what reads as "polished" rather than "faded". */
+  --glass-crystal-bg: oklch(0.995 0.002 258.8 / 0.55);
+  --glass-crystal-border: oklch(0.225 0.012 258.8 / 0.09);
+  --glass-crystal-filter: blur(24px) saturate(190%) brightness(1.06);
+  /* Specular top edge. Real glass catches light along its upper rim; without this
+     line a translucent rounded box just reads as a low-opacity div. */
+  --glass-crystal-sheen: oklch(1 0 0 / 0.75);
+  --glass-crystal-shadow: var(--elev-3);
   /* Two soft washes so the translucency has something to reveal. */
   --app-wash-1: oklch(0.48 0.15 258.8 / 0.08);
   --app-wash-2: oklch(0.6 0.118 184.704 / 0.06);
@@ -292,6 +304,15 @@ samp {
   --glass-border: oklch(1 0 0 / 0.09);
   --glass-blur: 16px;
   --glass-shadow: var(--elev-3);
+
+  /* Dark glass lifts the backdrop instead of tinting it: brightness above 1 is
+     what separates the pane from a near-black ground. Saturation stays lower than
+     light — the same 190% over dark bubbles turns them lurid. */
+  --glass-crystal-bg: oklch(0.17 0 0 / 0.5);
+  --glass-crystal-border: oklch(1 0 0 / 0.13);
+  --glass-crystal-filter: blur(24px) saturate(160%) brightness(1.22);
+  --glass-crystal-sheen: oklch(1 0 0 / 0.14);
+  --glass-crystal-shadow: var(--elev-4);
   --app-wash-1: oklch(0.58 0.14 258.8 / 0.14);
   --app-wash-2: oklch(0.696 0.17 162.48 / 0.08);
 
@@ -809,21 +830,69 @@ samp {
   border-color: var(--glass-border);
 }
 
+/* The floating chat header. Overlaying a scrolling list is the one place the
+   "no blur on scrolling surfaces" rule above gets bent, so the cost is paid down
+   deliberately:
+     - translateZ(0) promotes the pill to its own compositor layer, so scrolling
+       the list re-composites rather than repainting the blur on the main thread.
+     - NO `contain: paint` and no overflow clipping: the conversation menu is an
+       absolutely positioned child and either one would crop it. */
+@utility glass-crystal {
+  background-color: var(--glass-crystal-bg);
+  backdrop-filter: var(--glass-crystal-filter);
+  -webkit-backdrop-filter: var(--glass-crystal-filter);
+  border-color: var(--glass-crystal-border);
+  box-shadow:
+    var(--glass-crystal-shadow),
+    inset 0 1px 0 0 var(--glass-crystal-sheen);
+  transform: translateZ(0);
+  transition:
+    background-color 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Flush chrome — the icon rail and the sidebar — in the same crystal glass.
+   No drop shadow here: these sit edge to edge against their neighbours, where a
+   cast shadow reads as a seam rather than as depth, and no translateZ promotion
+   either. What sits behind them is the static app background, so the blur result
+   never changes and there is nothing for a compositor layer to save. */
+@utility glass-crystal-panel {
+  background-color: var(--glass-crystal-bg);
+  backdrop-filter: var(--glass-crystal-filter);
+  -webkit-backdrop-filter: var(--glass-crystal-filter);
+  border-color: var(--glass-crystal-border);
+  box-shadow: inset 0 1px 0 0 var(--glass-crystal-sheen);
+}
+
 /* Without support, or when the viewer asks for less transparency, fall back to a
    solid surface rather than leaving chrome see-through and unreadable. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass,
-  .glass-strong {
+  .glass-strong,
+  .glass-crystal,
+  .glass-crystal-panel {
     background-color: var(--card);
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
   .glass,
-  .glass-strong {
+  .glass-strong,
+  .glass-crystal,
+  .glass-crystal-panel {
     background-color: var(--card);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
+  }
+}
+
+/* A floating header has nothing behind it but the message it covers, so the
+   sheen is the only thing separating the two. Keep it when transparency is
+   reduced; drop the transition when motion is. */
+@media (prefers-reduced-motion: reduce) {
+  .glass-crystal {
+    transition: none;
   }
 }
 

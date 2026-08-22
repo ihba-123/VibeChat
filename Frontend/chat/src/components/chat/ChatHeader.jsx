@@ -1,9 +1,29 @@
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowLeft, Ban, MoreVertical, UserMinus, UserRound } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { useOnClickOutside } from '../../hooks/ui'
 import { cn, pluralize } from '../../lib/utils'
 import { Avatar, IconButton } from '../ui'
+
+/*
+ * The header floats over the message list rather than sitting above it, so the
+ * conversation runs edge to edge and slides under the glass.
+ *
+ * Two layers, and the split matters: the outer <header> spans the pane to
+ * position the pill but is `pointer-events-none`, so the gap around the pill
+ * stays clickable down to the messages underneath. Only the pill itself takes
+ * pointer events back.
+ *
+ * ChatRoom is responsible for the matching top inset on the list — see the
+ * HEADER_INSET export.
+ */
+
+/** Top padding the message list needs to clear the floating pill. */
+export const HEADER_INSET = 'pt-[4.75rem] sm:pt-[5.75rem]'
+
+const PILL =
+  'glass-crystal pointer-events-auto flex h-14 items-center gap-3 rounded-full border px-2 sm:h-16 sm:px-2.5'
 
 function Menu({ items }) {
   const [open, setOpen] = useState(false)
@@ -19,7 +39,7 @@ function Menu({ items }) {
       {open && (
         <div
           role="menu"
-          className="glass-strong absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border py-1 shadow-xl"
+          className="glass-strong absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-2xl border py-1 shadow-xl"
         >
           {items.map((item) => (
             <button
@@ -45,6 +65,27 @@ function Menu({ items }) {
   )
 }
 
+/** Positioning frame shared by the loading and loaded states. */
+function HeaderFrame({ children }) {
+  const reduceMotion = useReducedMotion()
+
+  return (
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-30 px-2 pt-2 sm:px-4 sm:pt-3">
+      <motion.div
+        className={PILL}
+        // Settles in rather than appearing. Only transform and opacity are
+        // animated, so this stays on the compositor and never lands on the main
+        // thread next to the blur.
+        initial={reduceMotion ? false : { opacity: 0, y: -12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {children}
+      </motion.div>
+    </header>
+  )
+}
+
 export default function ChatHeader({
   conversation,
   isOnline,
@@ -61,18 +102,18 @@ export default function ChatHeader({
   // back — so render the frame and fill in the details when they arrive.
   if (!conversation) {
     return (
-      <header className="glass relative z-30 flex h-16 shrink-0 items-center gap-3 border-b px-3 sm:px-4">
+      <HeaderFrame>
         {onBack && (
           <IconButton label="Back to conversations" className="lg:hidden" onClick={onBack}>
             <ArrowLeft className="icon-lg" />
           </IconButton>
         )}
-        <div className="h-11 w-11 animate-pulse rounded-full bg-muted" aria-hidden />
-        <div className="flex-1 space-y-1.5">
+        <div className="h-10 w-10 animate-pulse rounded-full bg-muted sm:h-11 sm:w-11" aria-hidden />
+        <div className="flex-1 space-y-1.5 pr-2">
           <div className="h-3.5 w-32 animate-pulse rounded bg-muted" aria-hidden />
           <div className="h-3 w-20 animate-pulse rounded bg-muted" aria-hidden />
         </div>
-      </header>
+      </HeaderFrame>
     )
   }
 
@@ -105,7 +146,7 @@ export default function ChatHeader({
   ].filter(Boolean)
 
   return (
-    <header className="glass relative z-30 flex h-16 shrink-0 items-center gap-3 border-b px-3 sm:px-4">
+    <HeaderFrame>
       {onBack && (
         <IconButton label="Back to conversations" className="lg:hidden" onClick={onBack}>
           <ArrowLeft className="icon-lg" />
@@ -116,7 +157,14 @@ export default function ChatHeader({
         type="button"
         onClick={onViewProfile}
         disabled={!conversation.other_user_id}
-        className="-mx-1.5 flex min-w-0 flex-1 items-center gap-3 rounded-lg px-1.5 py-1 text-left transition-colors hover:bg-muted/60 disabled:cursor-default disabled:hover:bg-transparent"
+        className={cn(
+          'flex min-w-0 flex-1 items-center gap-3 rounded-full py-1 pl-1 pr-2 text-left',
+          // duration/easing matched to the pill so hover and the entrance share a
+          // single motion vocabulary.
+          'transition-[background-color,transform] duration-200 ease-out',
+          'hover:bg-foreground/[0.06] active:scale-[0.995]',
+          'disabled:cursor-default disabled:hover:bg-transparent disabled:active:scale-100',
+        )}
       >
         <Avatar
           src={conversation.photo}
@@ -143,6 +191,6 @@ export default function ChatHeader({
       </button>
 
       {menuItems.length > 0 && <Menu items={menuItems} />}
-    </header>
+    </HeaderFrame>
   )
 }

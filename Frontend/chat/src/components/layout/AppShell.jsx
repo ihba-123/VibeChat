@@ -193,7 +193,9 @@ export default function AppShell() {
         {/* Icon rail */}
         <nav
           aria-label="Main"
-          className="glass relative z-40 hidden w-16 shrink-0 flex-col items-center gap-1.5 border-r py-3 sm:flex"
+          // No overflow-hidden: the account menu is an absolutely positioned
+          // child that opens upward, and clipping would cut it off.
+          className="glass-crystal relative z-40 my-2 ml-2 hidden w-16 shrink-0 flex-col items-center gap-1.5 rounded-3xl border py-3 sm:flex"
         >
           <button
             type="button"
@@ -248,12 +250,17 @@ export default function AppShell() {
         {showSidebar && (
           <aside
             className={cn(
-              'glass relative z-20 flex min-h-0 flex-col border-r',
-              isDesktop ? 'w-80 shrink-0 xl:w-96' : 'w-full',
+              'relative z-20 flex min-h-0 flex-col',
+              // Floating only on desktop. On mobile this panel *is* the screen,
+              // where insetting it would just waste width.
+              isDesktop
+                ? 'glass-crystal mx-2 my-2 w-80 shrink-0 overflow-hidden rounded-3xl border xl:w-96'
+                : 'glass-crystal-panel w-full border-r',
             )}
           >
-            {/* h-16 matches the chat header and the settings header exactly, so the
-                two panes line up across the divider instead of by coincidence. */}
+            {/* h-16 still matches the settings header exactly. It no longer matches
+                the chat header: that one is a pill floating clear of the top edge, so
+                it sits lower by design rather than aligning across the divider. */}
             <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-border px-4">
               <h1 className="truncate text-lg font-bold text-card-foreground">
                 {panel === 'chats' ? 'Chats' : 'People'}

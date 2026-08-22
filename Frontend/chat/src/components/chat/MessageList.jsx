@@ -20,9 +20,9 @@ function DateDivider({ value }) {
   )
 }
 
-function LoadingHistory() {
+function LoadingHistory({ topInset }) {
   return (
-    <div className="space-y-4 p-4">
+    <div className={cn('space-y-4 p-4', topInset)}>
       {[0, 1, 2, 3, 4].map((index) => {
         const outgoing = index % 2 === 1
         return (
@@ -62,6 +62,9 @@ export default function MessageList({
   onDiscard,
   onOpenImage,
   typingNames = [],
+  // Padding that keeps the first message clear of the floating chat header.
+  // Passed in rather than hardcoded so the header owns its own dimensions.
+  topInset = '',
 }) {
   const containerRef = useRef(null)
   const bottomRef = useRef(null)
@@ -180,7 +183,7 @@ export default function MessageList({
     onVisible?.()
   }, [messages.length, onVisible])
 
-  if (isLoading) return <LoadingHistory />
+  if (isLoading) return <LoadingHistory topInset={topInset} />
 
   if (!messages.length) {
     return (
@@ -212,7 +215,7 @@ export default function MessageList({
           Messages also fill from the top downwards, so the first message in a new
           conversation appears at the top rather than floating above the composer.
         */}
-        <div className="flex w-full min-w-0 flex-col px-3 py-4 sm:px-6 lg:px-8">
+        <div className={cn('flex w-full min-w-0 flex-col px-3 pb-4 sm:px-6 lg:px-8', topInset || 'pt-4')}>
         <div ref={topSentinelRef} aria-hidden />
 
         {hasOlder && (
@@ -274,7 +277,7 @@ export default function MessageList({
           type="button"
           onClick={() => scrollToBottom()}
           aria-label="Jump to latest messages"
-          className="glass-strong absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border shadow-lg transition-transform hover:scale-105"
+          className='glass-crystal absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border transition-transform duration-200 ease-out hover:scale-105 active:scale-95'
         >
           <ArrowDown className="icon-lg text-foreground" />
         </button>

@@ -250,7 +250,7 @@ export default function MessageComposer({
     // exactly where the user is already looking. `disabledAction` is a slot rather
     // than a blocking-aware button, which keeps this component presentational.
     return (
-      <div className="glass relative z-10 shrink-0 border-t px-4 py-3.5">
+      <div className="glass-crystal relative z-10 mx-2 mb-2 shrink-0 rounded-3xl border px-4 py-3.5 sm:mx-4 sm:mb-3">
         <div className="mx-auto flex max-w-xl flex-col items-center gap-2.5 sm:flex-row sm:justify-center sm:gap-4">
           <p className="text-center text-sm text-muted-foreground sm:text-left">
             {disabledReason || 'You cannot send messages in this conversation.'}
@@ -266,9 +266,14 @@ export default function MessageComposer({
   return (
     <form
       onSubmit={submit}
+      // Floats on its own margins rather than being absolutely positioned over
+      // the list. The textarea grows with the message, and an overlaid bar would
+      // need its height measured every keystroke to keep the last message clear —
+      // in flow, the flex layout does that for free.
+      //
       // shrink-0 keeps the composer at its natural height when the message
       // list grows; without it a flex parent can compress it.
-      className="glass relative z-10 shrink-0 border-t px-3 py-3 sm:px-4"
+      className="glass-crystal relative z-10 mx-2 mb-2 shrink-0 rounded-3xl border px-3 py-3 sm:mx-4 sm:mb-3 sm:px-4"
     >
       {pending && (
         <PendingAttachment
