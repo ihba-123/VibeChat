@@ -307,6 +307,27 @@ class BaseChatConsumer(AsyncJsonWebsocketConsumer):
             await self._join(realtime.room_group(room_id))
         await self.send_json({"type": "conversation.new", "room_id": room_id})
 
+    async def conversation_update(self, event):
+        await self.send_json(
+            {
+                "type": "conversation.update",
+                "room_id": event["room_id"],
+                "name": event.get("name"),
+            }
+        )
+
+    async def conversation_removed(self, event):
+        # Leave the room group as well as telling the client: without this the
+        # connection keeps receiving messages for a conversation the user is no
+        # longer a member of, until they happen to reconnect.
+        room_id = event["room_id"]
+        group = realtime.room_group(room_id)
+        self.room_ids.discard(room_id)
+        if group in self.joined_groups:
+            await self.channel_layer.group_discard(group, self.channel_name)
+            self.joined_groups.discard(group)
+        await self.send_json({"type": "conversation.removed", "room_id": room_id})
+
     async def friend_request(self, event):
         await self.send_json(
             {

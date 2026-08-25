@@ -224,15 +224,20 @@ describe('public screens', () => {
     expect(screen.getByRole('button', { name: /^get started$/i })).toBeInTheDocument()
   })
 
+  // Desktop and tablet only. A phone deliberately gets two snapping screens
+  // instead — see 'the landing page on a phone' below.
   it('fits the landing page in one screen with nothing below the fold', async () => {
     mountApp('/', { authenticated: false })
     await screen.findByRole('heading', { name: /chat\. connect\./i })
 
-    // `h-dvh`, not `min-h-screen`: the latter is only a floor, so the page still
-    // grows and scrolls as soon as content exceeds it. And `vh` on mobile measures
-    // the viewport with the address bar expanded, which scrolls by the toolbar's
-    // height. `overflow-hidden` is the backstop that makes "no scroll" literal.
-    const page = document.querySelector('div.h-dvh')
+    // `app-viewport`, not `min-h-screen`: the latter is only a floor, so the page
+    // still grows and scrolls as soon as content exceeds it. And `vh` on mobile
+    // measures the viewport with the address bar expanded, which scrolls by the
+    // toolbar's height — so the utility resolves to `dvh` with a `vh` fallback for
+    // browsers that do not know the unit, rather than the bare `h-dvh` that the
+    // minifier strips back to a single unsupported declaration.
+    // `overflow-hidden` is the backstop that makes "no scroll" literal.
+    const page = document.querySelector('div.app-viewport')
     expect(page).not.toBeNull()
     expect(page).toHaveClass('overflow-hidden')
     expect(page.className).not.toMatch(/min-h-screen/)
@@ -241,6 +246,151 @@ describe('public screens', () => {
     // go below its content height, and the product preview pushes 1366x768 past the
     // fold — the exact failure this layout exists to avoid.
     expect(document.querySelector('main')).toHaveClass('min-h-0')
+  })
+
+  /**
+   * The phone layout is a separate composition, not the desktop one narrowed. These
+   * assert the structural decisions that make it one, and — just as importantly —
+   * that every one of them is written with `max-sm:`, so the tablet and desktop
+   * layouts are reached by exactly the classes they always were.
+   *
+   * jsdom applies no CSS (`css: false` in the vitest config), so what can be checked
+   * here is which rules were asked for, not the pixels they produce. The companion
+   * check runs against the built stylesheet, where every `max-sm:` rule must land
+   * inside a max-width media query.
+   */
+  describe('the landing page on a phone', () => {
+    const mountLanding = async () => {
+      setViewport(390)
+      mountApp('/', { authenticated: false })
+      return screen.findByRole('heading', { name: /chat\. connect\./i })
+    }
+
+    it('keeps the sign-up path reachable from the header', async () => {
+      await mountLanding()
+
+      // Both survive the compact header rather than collapsing into a menu the
+      // visitor has to discover.
+      expect(screen.getByRole('button', { name: /^login$/i })).toBeVisible()
+      expect(screen.getByRole('button', { name: /get started/i })).toBeVisible()
+    })
+
+    it('gives the primary CTA a thumb-sized target and the secondary less weight', async () => {
+      await mountLanding()
+
+      const primary = screen.getByRole('button', { name: /start chatting/i })
+      const secondary = screen.getByRole('button', { name: /explore/i })
+
+      // 48px on a phone, up from the shared 44px `lg` size.
+      expect(primary.className).toMatch(/max-sm:h-12/)
+      // The outline is dropped for a flat tint, so the two do not read as a pair of
+      // equally-weighted choices stacked full-width.
+      expect(secondary.className).toMatch(/max-sm:border-transparent/)
+      expect(secondary.className).toMatch(/max-sm:bg-muted/)
+    })
+
+    it('breaks the headline in a chosen place rather than wherever it runs out', async () => {
+      await mountLanding()
+
+      const heading = screen.getByRole('heading', { name: /chat\. connect\./i })
+      const rule = heading.querySelector('br')
+
+      // Previously `hidden sm:block`, so a phone wrapped the line on its own and
+      // orphaned the blue span. The break now applies at every width.
+      expect(rule).not.toBeNull()
+      expect(rule.className).toBe('')
+      expect(heading.querySelector('.text-primary')).toHaveTextContent('Stay in the moment.')
+    })
+
+    /**
+     * The phone layout is two snapping screens: the pitch, then the product. It is
+     * built out of `order` on the mobile column rather than a second copy of the
+     * markup, so the desktop 45/55 row is the same DOM in the same source order.
+     */
+    it('is two snapping screens, pitch first and product second', async () => {
+      await mountLanding()
+
+      const root = document.querySelector('.app-viewport')
+      // The desktop rule — one viewport, no scroll — is suspended below `sm`.
+      expect(root.className).toMatch(/max-sm:overflow-y-auto/)
+      expect(root.className).toMatch(/max-sm:snap-mandatory/)
+
+      const pitch = document.querySelector('#pitch')
+      const product = document.querySelector('#product')
+      expect(pitch.className).toMatch(/max-sm:order-1/)
+      expect(product.className).toMatch(/max-sm:order-2/)
+
+      // Each is a viewport tall, less the sticky header it must not hide under.
+      for (const section of [pitch, product]) {
+        expect(section.className).toMatch(/max-sm:min-h-\[calc\(100dvh/)
+        expect(section.className).toMatch(/max-sm:snap-start/)
+        expect(section.className).toMatch(/max-sm:scroll-mt-14/)
+      }
+
+      // Source order is unchanged: the copy still precedes the preview, so the CTAs
+      // come before decorative chrome for a keyboard.
+      expect(pitch.compareDocumentPosition(product) & Node.DOCUMENT_POSITION_FOLLOWING)
+        .toBeTruthy()
+    })
+
+    it('advertises the second screen and links to it', async () => {
+      await mountLanding()
+
+      const cue = screen.getByRole('link', { name: /see it in action/i })
+      expect(cue).toHaveAttribute('href', '#product')
+      // A real anchor, so it works before hydration and lands on the snap position.
+      expect(document.querySelector('#product')).not.toBeNull()
+    })
+
+    it('keeps the header reachable from either screen', async () => {
+      await mountLanding()
+
+      const header = document.querySelector('header')
+      expect(header.className).toMatch(/max-sm:sticky/)
+      expect(header.className).toMatch(/max-sm:top-0/)
+      // Translucent over a scrolling product shot, so it needs its own blur.
+      expect(header.className).toMatch(/max-sm:backdrop-blur/)
+    })
+
+    it('sizes the CTAs rather than stretching them edge to edge', async () => {
+      await mountLanding()
+
+      const row = screen.getByRole('button', { name: /start chatting/i }).parentElement
+      // `items-stretch` made the primary as wide as the viewport — 398px on a 430px
+      // screen, which reads as a banner rather than a button.
+      expect(row.className).toMatch(/max-sm:items-center/)
+      for (const name of [/start chatting/i, /explore/i]) {
+        expect(screen.getByRole('button', { name }).className).toMatch(/max-sm:w-\[min\(/)
+      }
+    })
+
+    it('gives the product screen a caption and a sized card', async () => {
+      await mountLanding()
+
+      const preview = screen.getByRole('img', { name: /preview of the .* app/i })
+      const slot = preview.parentElement
+
+      // Reached by scrolling, so the card has to say what it is — on desktop the
+      // headline is on screen beside it and does that job.
+      expect(document.querySelector('#product')).toHaveTextContent(/built for real conversations/i)
+
+      // Sized against the viewport like the desktop card, rather than rationed the
+      // leftovers of a shared screen.
+      expect(slot.className).toMatch(/max-sm:h-\[min\(/)
+      expect(slot.className).toMatch(/max-sm:max-h-none/)
+      expect(slot.className).toMatch(/max-sm:min-h-\[/)
+    })
+
+    it('respects the bottom safe area on the last screen', async () => {
+      await mountLanding()
+
+      const product = document.querySelector('#product')
+      expect(product.className).toMatch(/max-sm:pb-\[max\(/)
+      expect(product.className).toMatch(/env\(safe-area-inset-bottom\)/)
+
+      const header = document.querySelector('header')
+      expect(header.className).toMatch(/env\(safe-area-inset-top\)/)
+    })
   })
 
   it('shows the product itself rather than a generic illustration', async () => {
@@ -1034,5 +1184,141 @@ describe('theme ground across the session boundary', () => {
 
     await screen.findByRole('button', { name: /account menu/i })
     expect(document.documentElement.style.backgroundColor).toBe('')
+  })
+})
+
+/**
+ * The switch used to animate a colour transition on every element in the document at
+ * once, which is why it read as a fill spreading across the page rather than one
+ * change, and why it got slower the more of the app was on screen. It is now a single
+ * compositor cross-fade of the whole viewport, with element transitions held off for
+ * the duration so nothing eases on its own clock underneath it.
+ */
+describe('the theme switch', () => {
+  const toggleTheme = async (user) => {
+    const [control] = screen.getAllByRole('button', { name: /switch to (light|dark) mode/i })
+    await user.click(control)
+  }
+
+  const mountAppAt = async (theme) => {
+    localStorage.setItem('theme', theme)
+    const user = userEvent.setup()
+    mountApp('/app')
+    await screen.findByRole('button', { name: /account menu/i })
+    return user
+  }
+
+  it('flips the document class and persists the choice', async () => {
+    const user = await mountAppAt('dark')
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+
+    await toggleTheme(user)
+
+    expect(document.documentElement.classList.contains('dark')).toBe(false)
+    expect(document.documentElement.style.colorScheme).toBe('light')
+    expect(localStorage.getItem('theme')).toBe('light')
+  })
+
+  it('runs the change inside a view transition when the browser has one', async () => {
+    const finished = Promise.resolve()
+    const startViewTransition = vi.fn((callback) => {
+      callback()
+      return { finished, ready: finished, updateCallbackDone: finished }
+    })
+    document.startViewTransition = startViewTransition
+
+    try {
+      const user = await mountAppAt('dark')
+      await toggleTheme(user)
+
+      expect(startViewTransition).toHaveBeenCalledTimes(1)
+      expect(document.documentElement.classList.contains('dark')).toBe(false)
+    } finally {
+      delete document.startViewTransition
+    }
+  })
+
+  /**
+   * The palette change has to be applied *inside* the view transition's callback.
+   * Applied after it returns, the browser has already snapshotted the new state and
+   * cross-fades two identical frames — the theme then appears to snap once the fade
+   * has finished rather than during it.
+   */
+  it('applies the new palette inside the transition callback, not after it', async () => {
+    let darkDuringCallback = null
+    const finished = Promise.resolve()
+    document.startViewTransition = (callback) => {
+      callback()
+      darkDuringCallback = document.documentElement.classList.contains('dark')
+      return { finished, ready: finished, updateCallbackDone: finished }
+    }
+
+    try {
+      const user = await mountAppAt('dark')
+      await toggleTheme(user)
+      expect(darkDuringCallback).toBe(false)
+    } finally {
+      delete document.startViewTransition
+    }
+  })
+
+  /** Without the API the switch is instant, which is still never a staggered fill. */
+  it('still switches when the browser has no view transitions', async () => {
+    expect(document.startViewTransition).toBeUndefined()
+
+    const user = await mountAppAt('light')
+    await toggleTheme(user)
+
+    expect(document.documentElement.classList.contains('dark')).toBe(true)
+  })
+
+  it('suppresses element transitions while the switch is in flight', async () => {
+    let switchingDuringCallback = null
+    const finished = Promise.resolve()
+    document.startViewTransition = (callback) => {
+      callback()
+      switchingDuringCallback =
+        document.documentElement.classList.contains('theme-switching')
+      return { finished, ready: finished, updateCallbackDone: finished }
+    }
+
+    try {
+      const user = await mountAppAt('dark')
+      await toggleTheme(user)
+
+      expect(switchingDuringCallback).toBe(true)
+      // And released once the fade is over, so the app keeps its ordinary hover and
+      // focus transitions.
+      await waitFor(() =>
+        expect(document.documentElement.classList.contains('theme-switching')).toBe(false),
+      )
+    } finally {
+      delete document.startViewTransition
+    }
+  })
+
+  /**
+   * Both toggles read one module-level store, so the rail control and the mobile
+   * header control cannot disagree about which way the next tap should go.
+   */
+  it('keeps every toggle on screen in agreement', async () => {
+    setViewport(390)
+    const user = await mountAppAt('dark')
+
+    const labels = () =>
+      new Set(
+        screen
+          .getAllByRole('button', { name: /switch to (light|dark) mode/i })
+          .map((button) => button.getAttribute('aria-label')),
+      )
+
+    const before = labels()
+    expect(before.size).toBe(1)
+
+    await toggleTheme(user)
+
+    const after = labels()
+    expect(after.size).toBe(1)
+    expect([...after][0]).not.toBe([...before][0])
   })
 })

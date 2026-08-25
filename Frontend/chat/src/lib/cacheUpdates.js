@@ -179,6 +179,26 @@ export const patchConversation = (queryClient, roomId, patch) => {
 export const clearConversationUnread = (queryClient, roomId) =>
   patchConversation(queryClient, roomId, { unread_count: 0 })
 
+/**
+ * Drop a conversation the viewer is no longer part of, along with its history.
+ *
+ * The message cache goes too: leaving it behind means a removed member who
+ * navigates back to the URL is served the old transcript from cache while the
+ * server would answer 403.
+ */
+export const removeConversation = (queryClient, roomId) => {
+  const id = Number(roomId)
+  queryClient.setQueryData(keys.conversations.list(), (data) => {
+    if (!data?.pages?.length) return data
+    const pages = data.pages.map((page) => ({
+      ...page,
+      results: page.results.filter((row) => row.id !== id),
+    }))
+    return { ...data, pages }
+  })
+  queryClient.removeQueries({ queryKey: keys.messages.room(id) })
+}
+
 /** Reflect a presence change everywhere a person is rendered. */
 export const applyPresence = (queryClient, userId, isOnline) => {
   queryClient.setQueryData(keys.conversations.list(), (data) => {

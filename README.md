@@ -304,7 +304,15 @@ everything through `python-decouple`; the frontend funnels every `VITE_*` var th
   is logged.
 - **Uploads required a working Cloudinary account.** `CloudinaryField` gives no way to
   store a file anywhere else, so avatars and attachments were impossible without one.
-  Now storage-backed fields with a `MEDIA_BACKEND` switch and a local-disk fallback.
+  Now storage-backed fields with a `MEDIA_BACKEND` switch and a local-disk fallback. The
+  `cloudinary.config()` call at the top of settings still read the three credentials
+  with a bare `config('CLOUDINARY_CLOUD_NAME')`, though — and python-decouple raises
+  `UndefinedValueError` for a key that is simply absent, so settings failed to import
+  a dozen lines *before* reaching the fallback written to handle that exact case.
+  Any deployment that did not declare the keys at all could not start. All three are
+  now read with defaults, and the SDK is configured only when there is something to
+  configure: handed three empty strings it is nominally configured with no
+  `cloud_name`, which is the state that makes URL building raise.
 - **Every avatar-less user produced a 404.** The default avatar was a Cloudinary
   public id that has to exist in the configured account; when it does not, each list
   row fires a broken image request. Absent an explicit `DEFAULT_AVATAR_URL`, the API
@@ -376,6 +384,55 @@ everything through `python-decouple`; the frontend funnels every `VITE_*` var th
   locked with `select_for_update`.
 - **Opening an existing direct chat returned 400** with no room id, leaving the client
   nowhere to navigate. It is now idempotent: 200 with the existing room.
+- **Unfriending someone could make them un-re-addable.** Removing a friend dropped
+  the two membership rows and left the `FriendRequest` behind, still saying
+  "accepted" about two people who were no longer friends. `send_friend_request` reads
+  that history as current, and a settled request addressed *to* the sender was
+  answered with "this person already sent you a request — accept it instead" —
+  pointing at a request that no longer existed anywhere in the UI. It hit whoever had
+  originally *accepted*, since the stored row runs sender → accepter, and there was
+  no way out of it. Unfriending now clears the request history for the pair (the
+  conversation and its messages are deliberately untouched), and a settled request in
+  the other direction no longer blocks a fresh one. The same dead end could be
+  reached without a friendship at all: A asks, B rejects, B can never ask A.
+- **The theme switch got slower the more of the app was on screen.** A
+  `html.theme-transition *` rule started a colour transition on *every element in the
+  document*, so the page did not change theme — each panel eased there on its own
+  clock and it read as a fill spreading across the view. Every frame of those
+  transitions also repainted the glass chrome, re-running its `backdrop-filter` blur
+  for the whole duration, per panel. And `useScopedTheme()` subscribed to the theme
+  store from the root of the signed-in area, so each toggle re-rendered the route
+  guard, AppShell, the conversation list and every message bubble — for a value only
+  the toggle's own glyph displays. The switch is now one `startViewTransition`
+  cross-fade of the whole viewport: the palette flips in a single style pass with
+  element transitions suppressed, and two snapshots blend on the compositor. Nothing
+  repaints during the fade, no blur is recomputed, and every breakpoint gets the
+  identical transition. Browsers without the API swap instantly rather than
+  staggering.
+- **The landing page was a desktop composition narrowed onto a phone.** Its one rule
+  — one viewport, no scroll — is a desktop rule: side by side, the copy and the
+  product preview are one composition, but stacked into a phone they are two, and
+  forcing both into a single screen made every element fight the others for height.
+  At 320×568 that was a 24px headline over a 195px chat card, each cramped, neither
+  the subject; on a tall phone a `max-h-[42vh]` cap stopped the card short and left a
+  band of dead background under it. Below `sm` the page is now two screens that snap
+  — the pitch and its call to action, then the product — with a sticky header across
+  both, a cue advertising the second, and the preview re-proportioned for a phone
+  (13px bubbles, a 36px avatar, a date chip, a softer radius). The CTAs are sized
+  rather than stretched: `items-stretch` made the primary as wide as the viewport,
+  which at 430px reads as a banner rather than a button. Every mobile rule is written
+  with the `max-sm:` variant, and the build is checked to confirm all 93 of them are
+  emitted inside a max-width media query, so the tablet and desktop layouts are
+  reached by exactly the classes they always were. Measured over CDP at 320, 360,
+  375, 390 and 430: no horizontal overflow, nothing clipped, two clean screens.
+- **The mobile tab bar scrolled away.** It was the last child of the sidebar's flex
+  column, so a long conversation list could compress it, and the shell's height came
+  from a lone `h-dvh` — which the build's minifier reduces to a single `100dvh`
+  declaration, leaving anything older than its browser targets at `height: auto`, the
+  document scrolling, and the bar going with it. The bar is now fixed to the viewport
+  with a spacer holding its place in the column, the shell height has a real
+  `@supports` fallback, and `viewport-fit=cover` plus `env(safe-area-inset-bottom)`
+  keeps the labels clear of the iOS home indicator.
 - **`CELERY_TASK_QUEUES` was a dict**, which is not a valid Celery value, so the
   `emails` queue was unroutable. Replaced with `task_routes`.
 - **`DEFAULT_FILE_STORAGE`** was removed in Django 5; now `STORAGES`.

@@ -9,6 +9,7 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Loader2, X } from 'lucide-react'
 import { forwardRef, useEffect, useId, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 import { accentFor, cn, initials } from '../lib/utils'
 
@@ -344,6 +345,17 @@ export function ErrorState({ title = 'Something went wrong', description, onRetr
 
 // -------------------------------------------------------------------- modal
 
+/**
+ * A dialog, rendered into `document.body`.
+ *
+ * The portal is not a detail. `fixed inset-0 z-50` only spans the viewport when
+ * nothing above it has opened a stacking context — and the app shell is full of
+ * them: the chat pane sits in a `relative z-10` wrapper, the sidebar is `z-20`
+ * and the icon rail `z-40`. A dialog rendered from inside a route (group info,
+ * for one) was therefore scoped to the chat pane and painted *underneath* the
+ * sidebar and rail. Portalling to the body puts every dialog in the root
+ * stacking context, so where it is rendered from stops mattering.
+ */
 export function Modal({ open, onClose, title, description, children, footer, size = 'md' }) {
   const widths = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' }
 
@@ -362,7 +374,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
     }
   }, [open, onClose])
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
@@ -407,7 +419,8 @@ export function Modal({ open, onClose, title, description, children, footer, siz
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }
 

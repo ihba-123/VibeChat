@@ -28,32 +28,48 @@ def send_friend_request(request_user, to_user_id):
     if profile.friends.filter(pk=to_user.pk).exists():
         raise ValidationError("You are already friends.")
 
-    existing = FriendRequest.objects.filter(
-        Q(from_user=request_user, to_user=to_user)
-        | Q(from_user=to_user, to_user=request_user)
-    ).first()
+    # Both directions, because `unique_together` is per direction and the pair can
+    # hold a settled row each way.
+    history = list(
+        FriendRequest.objects.filter(
+            Q(from_user=request_user, to_user=to_user)
+            | Q(from_user=to_user, to_user=request_user)
+        )
+    )
 
-    if existing:
-        if existing.status == "pending":
-            raise ValidationError(
-                "A friend request is already pending between you."
-                if existing.from_user_id == request_user.pk
-                else "This person already sent you a request — accept it instead."
+    pending = next((row for row in history if row.status == "pending"), None)
+    if pending:
+        raise ValidationError(
+            "A friend request is already pending between you."
+            if pending.from_user_id == request_user.pk
+            else "This person already sent you a request — accept it instead."
+        )
+
+    # Nothing is pending, so every surviving row is settled: rejected, or accepted
+    # for a friendship that has since been removed. Neither still describes
+    # anything, and a settled row addressed *to* this user used to be answered with
+    # "accept it instead" — pointing at a request that no longer exists anywhere in
+    # the UI, which left whoever had accepted the original request permanently
+    # unable to re-add the other person. Clear them and start over.
+    theirs = [row.pk for row in history if row.from_user_id != request_user.pk]
+    if theirs:
+        FriendRequest.objects.filter(pk__in=theirs).delete()
+
+    # This user's own settled row is reopened rather than replaced: recreating it
+    # is what `unique_together` would block outright.
+    mine = next((row for row in history if row.from_user_id == request_user.pk), None)
+    if mine:
+        mine.status = "pending"
+        mine.save(update_fields=["status"])
+        friend_request = mine
+    else:
+        try:
+            friend_request = FriendRequest.objects.create(
+                from_user=request_user, to_user=to_user
             )
-        # A previously rejected request may be retried by reopening the same row,
-        # which the unique_together constraint would otherwise block outright.
-        if existing.from_user_id == request_user.pk:
-            existing.status = "pending"
-            existing.save(update_fields=["status"])
-            realtime.notify_friend_request(to_user.pk, existing.pk, request_user)
-            return existing
-        raise ValidationError("This person already sent you a request — accept it instead.")
-
-    try:
-        friend_request = FriendRequest.objects.create(from_user=request_user, to_user=to_user)
-    except IntegrityError:
-        # Lost a race with a concurrent identical request.
-        raise ValidationError("A friend request is already pending between you.")
+        except IntegrityError:
+            # Lost a race with a concurrent identical request.
+            raise ValidationError("A friend request is already pending between you.")
 
     realtime.notify_friend_request(to_user.pk, friend_request.pk, request_user)
     return friend_request

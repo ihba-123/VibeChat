@@ -6,6 +6,7 @@ from .view.chatroom_views import ChatRoomCreateView, ConversationListView, Unrea
 from .view.friend_update_views import FriendRequestUpdateView
 from .view.friend_views import FriendDetailView, FriendListView
 from .view.friendrequest_views import FriendRequestView
+from .view.group_views import GroupDetailView, GroupMembersView, GroupMemberView
 from .view.message_list_view import MessageListView
 from .view.online_user_views import OnlineUsersView
 from .view.profile_update import ProfileUpdateView
@@ -19,6 +20,16 @@ urlpatterns = [
     path('chatrooms/', ConversationListView.as_view(), name='conversation-list'),
     path('chatrooms/create/', ChatRoomCreateView.as_view(), name='chatroom-create'),
     path('chatrooms/unread-count/', UnreadCountView.as_view(), name='unread-count'),
+
+    # Group administration. Declared after the literal paths above so "create"
+    # and "unread-count" can never be read as a room id.
+    path('chatrooms/<int:room_id>/', GroupDetailView.as_view(), name='group-detail'),
+    path('chatrooms/<int:room_id>/members/', GroupMembersView.as_view(), name='group-members'),
+    path(
+        'chatrooms/<int:room_id>/members/<int:member_id>/',
+        GroupMemberView.as_view(),
+        name='group-member',
+    ),
 
     # Messages
     path('message-list/<int:room_id>/', MessageListView.as_view(), name='message-list'),

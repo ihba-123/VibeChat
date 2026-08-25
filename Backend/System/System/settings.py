@@ -39,12 +39,31 @@ if not DEBUG:
 # --------------------
 # Cloudinary configuration
 # --------------------
-cloudinary.config(
-    cloud_name=config('CLOUDINARY_CLOUD_NAME'),
-    api_key=config('CLOUDINARY_API_KEY'),
-    api_secret=config('CLOUDINARY_API_SECRET'),
-    secure=True
+# Read with defaults. `config('KEY')` with no default raises UndefinedValueError for
+# a key that is merely absent, so a deployment that does not use Cloudinary at all —
+# the documented MEDIA_BACKEND=local path, and the reason the storage layer has a
+# local fallback — could not start: settings failed to import several lines before
+# reaching the fallback that exists to handle exactly this. Every other read of these
+# three keys already defaulted to ''; this call was the one that did not.
+CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
+CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY', default='')
+CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET', default='')
+
+_cloudinary_configured = all(
+    [CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]
 )
+
+# Configured only when there is something to configure. Handing the SDK three empty
+# strings leaves it nominally configured with no cloud_name, which is the state that
+# makes URL building raise — turning every profile, message and conversation response
+# into a 500 rather than degrading to an initials badge.
+if _cloudinary_configured:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
+    )
 
 # Fallback images. Previously four different literals were scattered across the
 # serializers, several of them typos pointing at assets that do not exist.
@@ -67,11 +86,6 @@ BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000').rstrip('/')
 # Where uploads go. 'auto' picks Cloudinary when all three credentials are present
 # and falls back to local disk otherwise, so the project runs end to end without a
 # Cloudinary account. Force either with MEDIA_BACKEND=cloudinary|local.
-_cloudinary_configured = all(
-    [config('CLOUDINARY_CLOUD_NAME', default=''),
-     config('CLOUDINARY_API_KEY', default=''),
-     config('CLOUDINARY_API_SECRET', default='')]
-)
 MEDIA_BACKEND = config('MEDIA_BACKEND', default='auto').lower()
 if MEDIA_BACKEND == 'auto':
     MEDIA_BACKEND = 'cloudinary' if _cloudinary_configured else 'local'
@@ -83,9 +97,9 @@ if MEDIA_BACKEND == 'cloudinary':
     # django-cloudinary-storage reads its credentials from this dict, separately
     # from the cloudinary.config() call above, and raises on import without it.
     CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME', default=''),
-        'API_KEY': config('CLOUDINARY_API_KEY', default=''),
-        'API_SECRET': config('CLOUDINARY_API_SECRET', default=''),
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+        'API_KEY': CLOUDINARY_API_KEY,
+        'API_SECRET': CLOUDINARY_API_SECRET,
     }
     STORAGES = {
         "default": {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"},

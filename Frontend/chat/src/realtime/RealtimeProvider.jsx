@@ -25,6 +25,8 @@ import {
   applyPresence,
   applyReadReceipt,
   bumpConversation,
+  patchConversation,
+  removeConversation,
   upsertMessage,
 } from '../lib/cacheUpdates'
 import keys from '../lib/queryKeys'
@@ -185,6 +187,27 @@ export function RealtimeProvider({ children }) {
 
         case 'conversation.new': {
           queryClient.invalidateQueries({ queryKey: keys.conversations.all })
+          break
+        }
+
+        case 'conversation.update': {
+          // A rename carries the new title, so the sidebar row is patched in place
+          // rather than refetched. Membership changes send no name and do need the
+          // list re-read, since the participant array is what changed.
+          if (event.name) patchConversation(queryClient, event.room_id, { title: event.name })
+          else queryClient.invalidateQueries({ queryKey: keys.conversations.all })
+          break
+        }
+
+        case 'conversation.removed': {
+          // Removed from a group. Drop it from the cache first so the sidebar and
+          // any open transcript stop rendering a conversation the server will now
+          // refuse, then let the shell notice the active room has gone.
+          removeConversation(queryClient, event.room_id)
+          queryClient.invalidateQueries({ queryKey: keys.conversations.unread() })
+          if (activeRoomRef.current === event.room_id) {
+            toast.warning('You were removed from this group.')
+          }
           break
         }
 

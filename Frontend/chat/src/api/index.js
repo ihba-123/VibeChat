@@ -73,6 +73,17 @@ export const chatApi = {
       participant_ids: participantIds,
     }),
 
+  /** Rename a group. Admin only — the server enforces it. */
+  renameGroup: ({ roomId, name }) => http.patch(endpoints.chat.group(roomId), { name }),
+
+  /** Add people to an existing group. Admin only. */
+  addGroupMembers: ({ roomId, participantIds }) =>
+    http.post(endpoints.chat.groupMembers(roomId), { participant_ids: participantIds }),
+
+  /** Remove someone from a group. Admin only. */
+  removeGroupMember: ({ roomId, userId }) =>
+    http.delete(endpoints.chat.groupMember(roomId, userId)),
+
   /** One page of history. `cursor` is null for the newest page. */
   messages: ({ roomId, cursor = null, signal } = {}) =>
     http.get(

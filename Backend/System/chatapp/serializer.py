@@ -278,12 +278,18 @@ class ConversationSerializer(serializers.ModelSerializer):
     unread_count = serializers.SerializerMethodField()
     is_online = serializers.SerializerMethodField()
     last_activity = serializers.SerializerMethodField()
+    # Who may rename the group and remove members. `is_admin` is the viewer's own
+    # answer, so the client never has to compare ids to decide what to render;
+    # `admin_id` is still sent so a member row can be badged as the admin.
+    admin_id = serializers.IntegerField(read_only=True)
+    is_admin = serializers.SerializerMethodField()
 
     class Meta:
         model = ChatRoom
         fields = [
             "id", "title", "is_group", "photo", "participants", "other_user_id",
             "last_message", "unread_count", "is_online", "last_activity", "created_at",
+            "admin_id", "is_admin",
         ]
         read_only_fields = fields
 
@@ -360,6 +366,11 @@ class ConversationSerializer(serializers.ModelSerializer):
     def get_last_activity(self, obj):
         message = getattr(obj, "last_message_obj", None)
         return (message.timestamp if message else obj.created_at).isoformat()
+
+    def get_is_admin(self, obj):
+        # Only meaningful for groups; a private chat has no admin, and `admin_id`
+        # is null there.
+        return bool(obj.is_group and obj.admin_id and obj.admin_id == self._viewer().pk)
 
 
 class FriendRequestSerializer(serializers.ModelSerializer):

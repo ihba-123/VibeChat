@@ -1,6 +1,8 @@
+from django.db import transaction
+from django.db.models import Q
 from rest_framework.exceptions import ValidationError
 
-from ..models import Profile
+from ..models import FriendRequest, Profile
 
 
 def friend_profiles(user, search=None):
@@ -23,5 +25,15 @@ def remove_friend(user, friend_user_id):
     if friend is None:
         raise ValidationError("You are not friends with this person.")
 
-    profile.remove_friend(friend)
+    with transaction.atomic():
+        profile.remove_friend(friend)
+        # The accepted request that created this friendship goes with it. Left
+        # behind, it is a row saying "accepted" about two people who are no longer
+        # friends, and `send_friend_request` reads it as history that still counts —
+        # so the pair could never be re-added. The conversation and its messages are
+        # deliberately untouched: unfriending is not deleting the chat.
+        FriendRequest.objects.filter(
+            Q(from_user=user, to_user=friend) | Q(from_user=friend, to_user=user)
+        ).delete()
+
     return friend

@@ -399,6 +399,95 @@ class FriendApiTests(TestCase):
         self.assertEqual(Profile.for_user(self.alice).friends.count(), 0)
         self.assertEqual(Profile.for_user(self.bob).friends.count(), 0)
 
+    def _befriend_then_unfriend(self, remover):
+        """alice asks, bob accepts, then `remover` drops the friendship."""
+        request = FriendRequest.objects.create(from_user=self.alice, to_user=self.bob)
+        auth_client(self.bob).put(
+            reverse("friend-request-update", args=[request.pk]), {"action": "accept"}, format="json"
+        )
+        other = self.alice if remover is self.bob else self.bob
+        auth_client(remover).delete(reverse("friend-detail", args=[other.pk]))
+
+    def test_unfriending_clears_the_request_that_created_the_friendship(self):
+        self._befriend_then_unfriend(self.alice)
+        self.assertFalse(FriendRequest.objects.filter(from_user=self.alice, to_user=self.bob).exists())
+
+    def test_the_accepter_can_re_add_after_unfriending(self):
+        # The regression: bob accepted alice's request, so the stored row runs
+        # alice -> bob. Once unfriended, bob sending a fresh request was answered
+        # with "accept it instead" — pointing at a request that no longer existed —
+        # and bob could never re-add alice.
+        self._befriend_then_unfriend(self.bob)
+
+        again = auth_client(self.bob).post(
+            reverse("friend-request"), {"to_user_id": self.alice.pk}, format="json"
+        )
+        self.assertEqual(again.status_code, 201, again.data)
+        self.assertTrue(
+            FriendRequest.objects.filter(
+                from_user=self.bob, to_user=self.alice, status="pending"
+            ).exists()
+        )
+
+    def test_the_sender_can_re_add_after_unfriending(self):
+        self._befriend_then_unfriend(self.alice)
+
+        again = auth_client(self.alice).post(
+            reverse("friend-request"), {"to_user_id": self.bob.pk}, format="json"
+        )
+        self.assertEqual(again.status_code, 201, again.data)
+        self.assertTrue(
+            FriendRequest.objects.filter(
+                from_user=self.alice, to_user=self.bob, status="pending"
+            ).exists()
+        )
+
+    def test_re_added_friendship_can_be_accepted_again(self):
+        self._befriend_then_unfriend(self.bob)
+        auth_client(self.bob).post(
+            reverse("friend-request"), {"to_user_id": self.alice.pk}, format="json"
+        )
+
+        incoming = auth_client(self.alice).get(reverse("friend-request"), {"direction": "incoming"})
+        self.assertEqual(len(incoming.data["results"]), 1)
+
+        accept = auth_client(self.alice).put(
+            reverse("friend-request-update", args=[incoming.data["results"][0]["id"]]),
+            {"action": "accept"},
+            format="json",
+        )
+        self.assertEqual(accept.status_code, 200, accept.data)
+        self.assertTrue(Profile.for_user(self.alice).friends.filter(pk=self.bob.pk).exists())
+        self.assertTrue(Profile.for_user(self.bob).friends.filter(pk=self.alice.pk).exists())
+
+    def test_a_rejected_request_does_not_block_the_other_direction(self):
+        # Same shape as the unfriend case, reached without a friendship: alice asks,
+        # bob rejects, and bob then decides to ask alice himself.
+        request = FriendRequest.objects.create(from_user=self.alice, to_user=self.bob)
+        auth_client(self.bob).put(
+            reverse("friend-request-update", args=[request.pk]), {"action": "reject"}, format="json"
+        )
+
+        response = auth_client(self.bob).post(
+            reverse("friend-request"), {"to_user_id": self.alice.pk}, format="json"
+        )
+        self.assertEqual(response.status_code, 201, response.data)
+
+    def test_a_pending_request_still_blocks_the_other_direction(self):
+        FriendRequest.objects.create(from_user=self.alice, to_user=self.bob)
+
+        response = auth_client(self.bob).post(
+            reverse("friend-request"), {"to_user_id": self.alice.pk}, format="json"
+        )
+        self.assertEqual(response.status_code, 400)
+
+    def test_unfriended_person_is_discoverable_again(self):
+        self._befriend_then_unfriend(self.bob)
+
+        response = auth_client(self.bob).get(reverse("online-users"))
+        ids = [row["user_id"] for row in response.data["results"]]
+        self.assertIn(self.alice.pk, ids)
+
 
 @override_settings(**TEST_SETTINGS)
 class BlockingApiTests(TestCase):

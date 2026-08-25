@@ -5,8 +5,19 @@ import { cn, formatDateDivider, isSameDay, withinBurst } from '../../lib/utils'
 import { Button, EmptyState, Skeleton, Spinner } from '../ui'
 import MessageBubble from './MessageBubble'
 
-/** Distance from the bottom that still counts as "following the conversation". */
-const NEAR_BOTTOM_PX = 120
+/**
+ * Distance from the bottom that still counts as "following the conversation".
+ *
+ * A floor, not the whole rule — see `followThreshold`. 120px was under the height
+ * of a single image bubble, so nudging the wheel once was enough to stop being
+ * counted as "at the bottom", and every message after that had to be scrolled to
+ * by hand.
+ */
+const NEAR_BOTTOM_PX = 160
+
+/** Quarter of the visible history, so the band scales with the pane. */
+const followThreshold = (container) =>
+  Math.max(NEAR_BOTTOM_PX, container.clientHeight * 0.25)
 
 function DateDivider({ value }) {
   return (
@@ -42,8 +53,15 @@ function LoadingHistory({ topInset }) {
  * The scrollable message history.
  *
  * Scroll behaviour is the fiddly part and it is handled explicitly:
- *  - New messages only auto-scroll when the user is already near the bottom, so
+ *  - Anything you send scrolls you to the bottom, always. You wrote it; you want
+ *    to see it land.
+ *  - Incoming messages only auto-scroll when you are already near the bottom, so
  *    reading back through history is never yanked away.
+ *  - A ResizeObserver re-pins the view whenever the content grows while you are
+ *    following along. Scrolling once on arrival is not enough: an image or a
+ *    file card has no height until it loads, so the message that triggered the
+ *    scroll is taller a moment later and the newest content ends up below the
+ *    fold — which is what left people scrolling down by hand for every photo.
  *  - Loading older messages prepends content, which would jump the viewport; the
  *    scroll offset is restored from the height delta before the browser paints.
  */
@@ -67,7 +85,7 @@ export default function MessageList({
   topInset = '',
 }) {
   const containerRef = useRef(null)
-  const bottomRef = useRef(null)
+  const contentRef = useRef(null)
   const topSentinelRef = useRef(null)
   const [showJumpButton, setShowJumpButton] = useState(false)
 
@@ -100,15 +118,35 @@ export default function MessageList({
     })
   }, [messages])
 
-  const scrollToBottom = useCallback((behavior = 'smooth') => {
-    bottomRef.current?.scrollIntoView({ behavior, block: 'end' })
+  /**
+   * Scroll the history to the very bottom.
+   *
+   * Sets the container's own `scrollTop` rather than calling `scrollIntoView` on a
+   * sentinel: that walks up the tree and can scroll ancestors too, and it aims at
+   * a position computed when the call was made — which is the wrong position by
+   * the time a just-arrived image has finished loading.
+   *
+   * `isNearBottom` is updated here rather than waiting for the scroll event, so a
+   * second message arriving in the same tick is not judged against a stale
+   * position.
+   */
+  const scrollToBottom = useCallback((behavior = 'auto') => {
+    const container = containerRef.current
+    if (!container) return
+    isNearBottom.current = true
+    setShowJumpButton(false)
+    if (behavior === 'smooth') {
+      container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' })
+    } else {
+      container.scrollTop = container.scrollHeight
+    }
   }, [])
 
   const handleScroll = useCallback(() => {
     const container = containerRef.current
     if (!container) return
     const distance = container.scrollHeight - container.scrollTop - container.clientHeight
-    isNearBottom.current = distance < NEAR_BOTTOM_PX
+    isNearBottom.current = distance < followThreshold(container)
     setShowJumpButton(distance > 400)
   }, [])
 
@@ -159,13 +197,46 @@ export default function MessageList({
 
     if (firstRender) {
       // Land at the bottom without an animation on entering a conversation.
-      container.scrollTop = container.scrollHeight
+      scrollToBottom('auto')
       return
     }
-    if (isNewMessage && isNearBottom.current) {
-      scrollToBottom(newest.status === 'sending' ? 'auto' : 'smooth')
+    if (!isNewMessage) return
+
+    // Your own message always wins over the follow state: having sent something
+    // from halfway up the history and been left staring at old messages is the
+    // one case where not scrolling is never what was wanted.
+    const isMine = newest.sender_id === currentUserId
+    if (isMine || isNearBottom.current) {
+      // Instant, not smooth. A glide is a moving target — it aims at the height
+      // measured when it started, so a second message (or an image finishing) part
+      // way through leaves the view short of the bottom.
+      scrollToBottom('auto')
     }
-  }, [messages, scrollToBottom])
+  }, [messages, currentUserId, scrollToBottom])
+
+  /**
+   * Keep the view pinned while the content grows underneath it.
+   *
+   * Images, file cards, link previews and the typing indicator all change height
+   * after they are inserted, and a window or pane resize changes the viewport under
+   * a fixed scroll offset. Re-pinning on every size change covers all of them, and
+   * costs nothing while the user is reading history: `isNearBottom` is false then,
+   * so the observer does not touch the scroll position.
+   */
+  useEffect(() => {
+    const container = containerRef.current
+    const content = contentRef.current
+    if (!container || !content || typeof ResizeObserver === 'undefined') return undefined
+
+    const observer = new ResizeObserver(() => {
+      // A pending history restore owns the scroll position for this frame.
+      if (restoreRef.current || !isNearBottom.current) return
+      container.scrollTop = container.scrollHeight
+    })
+    observer.observe(content)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
 
   // Reset the follow state when switching rooms. The parent also keys this
   // component by room, but keeping the guard here means the component is correct
@@ -215,7 +286,10 @@ export default function MessageList({
           Messages also fill from the top downwards, so the first message in a new
           conversation appears at the top rather than floating above the composer.
         */}
-        <div className={cn('flex w-full min-w-0 flex-col px-3 pb-4 sm:px-6 lg:px-8', topInset || 'pt-4')}>
+        <div
+          ref={contentRef}
+          className={cn('flex w-full min-w-0 flex-col px-3 pb-4 sm:px-6 lg:px-8', topInset || 'pt-4')}
+        >
         <div ref={topSentinelRef} aria-hidden />
 
         {hasOlder && (
@@ -268,14 +342,13 @@ export default function MessageList({
           </div>
         )}
 
-        <div ref={bottomRef} className="h-1" aria-hidden />
         </div>
       </div>
 
       {showJumpButton && (
         <button
           type="button"
-          onClick={() => scrollToBottom()}
+          onClick={() => scrollToBottom('smooth')}
           aria-label="Jump to latest messages"
           className='glass-crystal absolute bottom-4 right-4 flex h-10 w-10 items-center justify-center rounded-full border transition-transform duration-200 ease-out hover:scale-105 active:scale-95'
         >

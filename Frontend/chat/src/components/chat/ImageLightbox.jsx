@@ -1,8 +1,15 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { ExternalLink, X } from 'lucide-react'
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
-/** Full-screen image viewer. Closes on Escape or a click outside the image. */
+/**
+ * Full-screen image viewer. Closes on Escape or a click outside the image.
+ *
+ * Portalled to the body for the same reason `Modal` is: it is rendered from
+ * inside the chat pane, whose `relative z-10` wrapper is a stacking context, so
+ * without this the sidebar and the icon rail paint over the "full-screen" viewer.
+ */
 export default function ImageLightbox({ src, onClose }) {
   useEffect(() => {
     if (!src) return undefined
@@ -13,7 +20,7 @@ export default function ImageLightbox({ src, onClose }) {
     return () => document.removeEventListener('keydown', onKeyDown)
   }, [src, onClose])
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {src && (
         <motion.div
@@ -60,6 +67,7 @@ export default function ImageLightbox({ src, onClose }) {
           />
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }

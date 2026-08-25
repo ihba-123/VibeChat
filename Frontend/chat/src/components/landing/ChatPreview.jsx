@@ -18,6 +18,16 @@ import config from '../../config'
  * Exposed to assistive tech as a single labelled image. The bubbles below are
  * decorative fiction — read out individually they would sound like a real inbox,
  * so the subtree is hidden and the container carries one description instead.
+ *
+ * Below `sm` this stops being a shrunken desktop window and becomes the phone
+ * composition's subject: the side panels were already gone at that width, so what
+ * was left was a full-height card rendering a single conversation at desktop
+ * proportions — 11.5px bubbles, a 48px header and 14px icons, all of it reading as
+ * an application screenshot pasted into the page rather than a phone messaging UI.
+ * The `max-sm:` overrides below re-proportion it: bigger type, more air between
+ * rows, a softer and deeper corner radius, and a date chip pinned to the top so a
+ * tall card looks composed rather than half-empty. Nothing at `sm` and above moves —
+ * the auth screens render this too, and only ever at `lg` and up.
  */
 
 /**
@@ -77,11 +87,11 @@ const SCENES = {
 
 function TypingBubble() {
   return (
-    <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md bg-muted px-3 py-2.5">
+    <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md bg-muted px-3 py-2.5 max-sm:gap-2 max-sm:px-4 max-sm:py-3">
       {[0, 1, 2].map((index) => (
         <span
           key={index}
-          className="landing-typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground"
+          className="landing-typing-dot h-1.5 w-1.5 rounded-full bg-muted-foreground max-sm:h-2 max-sm:w-2"
           // Staggered off one shared keyframe rather than three animations.
           style={{ animationDelay: `${index * 0.16}s` }}
         />
@@ -106,7 +116,10 @@ export default function ChatPreview({ scene = 'inbox' }) {
     <div
       role="img"
       aria-label={`Preview of the ${config.appName} app: a live conversation with ${title} beside the chat list`}
-      className="flex h-full w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+      // A phone gets a deeper radius, a softened border and one step down the
+      // elevation scale: `shadow-2xl` plus a full-strength border is desktop window
+      // chrome, and at this size it framed the preview instead of seating it.
+      className="flex h-full w-full overflow-hidden rounded-2xl border border-border bg-card shadow-2xl max-sm:rounded-[1.625rem] max-sm:border-border/60 max-sm:shadow-xl"
     >
       <div aria-hidden="true" className="flex min-w-0 flex-1">
         {/* Conversation list. Dropped below md, where the preview becomes the
@@ -166,11 +179,16 @@ export default function ChatPreview({ scene = 'inbox' }) {
 
         {/* Active conversation. */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-12 shrink-0 items-center gap-2.5 border-b border-border px-3.5">
-            <Avatar name={title} size="xs" />
+          {/* 52px and a 36px avatar on a phone. Still compact — it is a header, not
+              a hero — but the 28px avatar and 12px name of the desktop card read as
+              a UI that had been zoomed out. */}
+          <header className="flex h-12 shrink-0 items-center gap-2.5 border-b border-border px-3.5 max-sm:h-[52px] max-sm:gap-3 max-sm:px-4">
+            <Avatar name={title} size="xs" className="max-sm:h-9 max-sm:w-9 max-sm:text-xs" />
             <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-foreground">{title}</p>
-              <p className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <p className="truncate text-xs font-semibold text-foreground max-sm:text-[13.5px]">
+                {title}
+              </p>
+              <p className="flex items-center gap-1 text-[10px] text-muted-foreground max-sm:gap-1.5 max-sm:text-[11.5px]">
                 <PresenceDot />
                 {status}
               </p>
@@ -179,15 +197,26 @@ export default function ChatPreview({ scene = 'inbox' }) {
 
           {/* justify-end keeps the newest message pinned to the composer, so the
               card can be shortened by the layout without stranding a gap. */}
-          <div className="flex min-h-0 flex-1 flex-col justify-end gap-2 overflow-hidden p-3.5">
+          <div className="flex min-h-0 flex-1 flex-col justify-end gap-2 overflow-hidden p-3.5 max-sm:gap-2.5 max-sm:p-4">
+            {/* Phone only, and `mb-auto` is the whole point: in a `justify-end`
+                column an auto margin eats the free space, so the chip sits at the top
+                of the card while the conversation stays pinned to the composer. On a
+                tall phone that turns the space above the first bubble from a gap into
+                the head of a conversation. */}
+            <div className="mb-auto hidden justify-center max-sm:flex">
+              <span className="rounded-full bg-muted/70 px-2.5 py-1 text-[10.5px] font-medium text-muted-foreground">
+                Today
+              </span>
+            </div>
+
             {messages.map((message) => (
               <div
                 key={message.text}
                 className={`flex ${message.from === 'me' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="max-w-[78%]">
+                <div className="max-w-[78%] max-sm:max-w-[82%]">
                   <div
-                    className={`rounded-2xl px-3 py-2 text-[11.5px] leading-snug ${
+                    className={`rounded-2xl px-3 py-2 text-[11.5px] leading-snug max-sm:px-3.5 max-sm:py-2.5 max-sm:text-[13px] max-sm:leading-[1.45] ${
                       message.from === 'me'
                         ? 'rounded-br-md bg-primary text-primary-foreground'
                         : 'rounded-bl-md bg-muted text-foreground'
@@ -196,7 +225,7 @@ export default function ChatPreview({ scene = 'inbox' }) {
                     {message.text}
                   </div>
                   <p
-                    className={`mt-1 text-[9.5px] tabular-nums text-muted-foreground ${
+                    className={`mt-1 text-[9.5px] tabular-nums text-muted-foreground max-sm:mt-1.5 max-sm:text-[10.5px] ${
                       message.from === 'me' ? 'text-right' : ''
                     }`}
                   >
@@ -212,14 +241,18 @@ export default function ChatPreview({ scene = 'inbox' }) {
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 border-t border-border px-3 py-2.5">
-            <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <Smile className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <div className="min-w-0 flex-1 truncate rounded-full bg-muted px-3 py-1.5 text-[11px] text-muted-foreground">
+          {/* `shrink-0` is what keeps this stable: the message column above owns all
+              the flex, so the composer is the same height whatever the card is doing
+              and nothing shifts as the layout resizes it. On a phone the row and its
+              controls grow to the proportions a real composer has at that width. */}
+          <div className="flex shrink-0 items-center gap-2 border-t border-border px-3 py-2.5 max-sm:gap-2.5 max-sm:px-3.5 max-sm:py-3">
+            <Paperclip className="h-3.5 w-3.5 shrink-0 text-muted-foreground max-sm:h-[18px] max-sm:w-[18px]" />
+            <Smile className="h-3.5 w-3.5 shrink-0 text-muted-foreground max-sm:h-[18px] max-sm:w-[18px]" />
+            <div className="min-w-0 flex-1 truncate rounded-full bg-muted px-3 py-1.5 text-[11px] text-muted-foreground max-sm:px-3.5 max-sm:py-2.5 max-sm:text-[12.5px]">
               Type a message…
             </div>
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Send className="h-3 w-3" />
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground max-sm:h-9 max-sm:w-9">
+              <Send className="h-3 w-3 max-sm:h-4 max-sm:w-4" />
             </span>
           </div>
         </div>

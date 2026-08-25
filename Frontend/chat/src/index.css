@@ -501,37 +501,24 @@ samp {
     background-repeat: no-repeat;
   }
 
-  /* Theme change: a brief, global colour cross-fade.
-     Applied as a transient class rather than a permanent `* { transition }` rule.
-     Without it only interactive elements animated (from the rule below) while every
-     surface snapped instantly, which read as a doubled, staggered transition. The
-     class is removed once the fade is done, so nothing pays for it during ordinary
-     use, and only paint-only properties are listed so it cannot cause layout work. */
-  html.theme-transition {
-    transition-property: background-color, box-shadow, --app-wash-1, --app-wash-2;
-    transition-duration: 180ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
+  /* Held on <html> only while the theme is being swapped, by `runThemeChange()`.
 
-  html.theme-transition,
-  html.theme-transition *,
-  html.theme-transition *::before,
-  html.theme-transition *::after {
-    /* `opacity` and `transform` are here for one reason: this selector outranks the
-       utility classes on the theme-toggle glyphs, so omitting them cancelled the
-       icon's own cross-fade for exactly the 180ms the rest of the page was fading —
-       the icon snapped while everything else eased. Both are compositor-only.
+     Everything on the page changes colour at once during a theme switch, and the
+     one thing that must not happen is each element easing there on its own clock:
+     that is not a transition, it is the page being filled in component by component,
+     and it is what the animated `html.theme-transition *` rule that used to live
+     here actually produced. It also meant every glass panel re-ran its backdrop blur
+     on every frame of the fade, which is why the switch got slower the more of the
+     app was on screen.
 
-       `box-shadow` joined them once the elevation scale became genuinely different
-       between the themes: light shadows are tinted and soft, dark ones deep and
-       tight, so leaving it out meant every card's shadow jumped in one frame while
-       its colours eased over 180ms. One element changing instantly in the middle of
-       a smooth fade is exactly what reads as a blink. */
-    transition-property: background-color, border-color, color, fill, stroke, opacity,
-      transform, box-shadow;
-    transition-duration: 180ms;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-delay: 0s;
+     So the flip itself is instantaneous and unanimated, and the *whole viewport* is
+     cross-faded once, on the compositor, by the view transition below. `!important`
+     because this has to beat the interactive-element rule further down as well as
+     any utility class. */
+  html.theme-switching *,
+  html.theme-switching *::before,
+  html.theme-switching *::after {
+    transition: none !important;
   }
 
   /* Narrow, short transitions on interactive elements only. Deliberately not
@@ -900,5 +887,64 @@ samp {
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* The app shell's height, as a cascade rather than a single `h-dvh` class.
+   `100dvh` is what we actually want on a phone — it tracks the browser chrome
+   collapsing — but a browser that does not know the unit drops the declaration
+   entirely, leaving the shell at `height: auto`. The shell then grows past the
+   viewport, the document itself starts scrolling, and the mobile tab bar pinned to
+   the bottom of the shell scrolls off the screen with it. The earlier declarations
+   are the fallbacks each such browser keeps. */
+@utility app-viewport {
+  height: 100dvh;
+}
+
+/* The fallback lives in its own block on purpose. Written as three `height`
+   declarations in the rule above, the build's minifier prunes the first two — it
+   knows the configured targets understand `dvh` — and anything older than those
+   targets is left at `height: auto`, which is the failure this guards against. */
+@supports not (height: 1dvh) {
+  .app-viewport {
+    height: 100vh;
+  }
+}
+
+/* Bottom padding for chrome that must clear the iOS home indicator, on top of the
+   padding the element already wants. Needs `viewport-fit=cover` in index.html to
+   resolve to anything but 0. */
+@utility pb-safe {
+  padding-bottom: max(0.375rem, env(safe-area-inset-bottom));
+}
+
+/* The theme cross-fade.
+
+   `runThemeChange()` in hooks/ui.js wraps the switch in `document.startViewTransition`,
+   so the browser holds a snapshot of the old viewport, applies the new palette in a
+   single style pass, and blends the two images. The whole page therefore changes as
+   one surface: no element repaints during the fade, no `backdrop-filter` is
+   recomputed, and the cost is identical on a phone and on a desktop because it is one
+   composited image either way.
+
+   `plus-lighter` is what makes it a true cross-fade. Composited normally the outgoing
+   snapshot fades to transparent while the incoming one fades up from transparent, and
+   the midpoint shows the page background through both — a visible dip, which reads as
+   a flash on a dark/light swap. Blending additively keeps the two at a constant sum. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 220ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  mix-blend-mode: plus-lighter;
+}
+
+/* Reduced motion cuts the fade to a straight swap. `runThemeChange()` also skips the
+   view transition entirely in that case; this covers the transition already running
+   when the preference changes. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
   }
 }

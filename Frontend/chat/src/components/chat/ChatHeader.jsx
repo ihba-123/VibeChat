@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { ArrowLeft, Ban, MoreVertical, UserMinus, UserRound } from 'lucide-react'
+import { ArrowLeft, Ban, MoreVertical, Pencil, UserMinus, UserRound, Users } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { useOnClickOutside } from '../../hooks/ui'
@@ -95,6 +95,7 @@ export default function ChatHeader({
   onBlock,
   onUnblock,
   onRemoveFriend,
+  onGroupInfo,
   isBlocked,
 }) {
   // A conversation opened by direct link may not be in the cached sidebar page
@@ -128,22 +129,37 @@ export default function ChatHeader({
     return isOnline ? 'Online' : 'Offline'
   })()
 
-  const menuItems = [
-    conversation.other_user_id && {
-      label: 'View profile',
-      icon: UserRound,
-      onClick: onViewProfile,
-    },
-    conversation.other_user_id && {
-      label: 'Remove friend',
-      icon: UserMinus,
-      onClick: onRemoveFriend,
-    },
-    conversation.other_user_id &&
-      (isBlocked
-        ? { label: 'Unblock', icon: Ban, onClick: onUnblock }
-        : { label: 'Block', icon: Ban, onClick: onBlock, danger: true }),
-  ].filter(Boolean)
+  // A group and a direct chat have nothing in common here, so the menu is built
+  // from one branch or the other rather than from a list of conditionals that all
+  // happen to test the same thing. Groups previously fell through with an empty
+  // list, which is why they had no menu button at all.
+  const menuItems = conversation.is_group
+    ? [
+        { label: 'Group info', icon: Users, onClick: onGroupInfo },
+        // Shown to the admin only — and to the admin the entry is the useful one,
+        // so it opens the same dialog with the name already editable.
+        conversation.is_admin && {
+          label: 'Rename group',
+          icon: Pencil,
+          onClick: () => onGroupInfo?.({ rename: true }),
+        },
+      ].filter(Boolean)
+    : [
+        conversation.other_user_id && {
+          label: 'View profile',
+          icon: UserRound,
+          onClick: onViewProfile,
+        },
+        conversation.other_user_id && {
+          label: 'Remove friend',
+          icon: UserMinus,
+          onClick: onRemoveFriend,
+        },
+        conversation.other_user_id &&
+          (isBlocked
+            ? { label: 'Unblock', icon: Ban, onClick: onUnblock }
+            : { label: 'Block', icon: Ban, onClick: onBlock, danger: true }),
+      ].filter(Boolean)
 
   return (
     <HeaderFrame>
@@ -155,8 +171,8 @@ export default function ChatHeader({
 
       <button
         type="button"
-        onClick={onViewProfile}
-        disabled={!conversation.other_user_id}
+        onClick={conversation.is_group ? onGroupInfo : onViewProfile}
+        disabled={!conversation.is_group && !conversation.other_user_id}
         className={cn(
           'flex min-w-0 flex-1 items-center gap-3 rounded-full py-1 pl-1 pr-2 text-left',
           // duration/easing matched to the pill so hover and the entrance share a

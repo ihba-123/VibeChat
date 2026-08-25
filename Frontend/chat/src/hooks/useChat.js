@@ -18,6 +18,7 @@ import {
   flattenMessages,
   flattenPages,
   markMessageFailed,
+  patchConversation,
   removeMessage,
 } from '../lib/cacheUpdates'
 import keys from '../lib/queryKeys'
@@ -255,6 +256,67 @@ export function useCreateGroup() {
     onSuccess: (data) => {
       subscribeToRoom(data.room_id)
       queryClient.invalidateQueries({ queryKey: keys.conversations.all })
+    },
+  })
+}
+
+/**
+ * Renaming a group. Admin only; the server is the authority on that, so a
+ * non-admin caller gets a 403 rather than a silently ignored request.
+ *
+ * The sidebar row is patched directly instead of invalidated: the new title is
+ * already known, and refetching the list would reorder nothing but would flash the
+ * old name until the response landed.
+ */
+export function useRenameGroup(roomId) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (name) => chatApi.renameGroup({ roomId: Number(roomId), name }),
+    onSuccess: (data) => {
+      patchConversation(queryClient, Number(roomId), { title: data.name })
+    },
+  })
+}
+
+/** Removing a member from a group. Admin only. */
+export function useRemoveGroupMember(roomId) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (userId) =>
+      chatApi.removeGroupMember({ roomId: Number(roomId), userId }),
+    onSuccess: (data) => {
+      patchConversation(queryClient, Number(roomId), (row) => ({
+        participants: (row.participants ?? []).filter(
+          (person) => person.user_id !== data.user_id,
+        ),
+      }))
+    },
+  })
+}
+
+/** Adding people to an existing group. Admin only. */
+export function useAddGroupMembers(roomId) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (participantIds) =>
+      chatApi.addGroupMembers({ roomId: Number(roomId), participantIds }),
+    onSuccess: (data) => {
+      // The response carries the new rows in the shape the sidebar stores, so the
+      // member list updates without a refetch. Guarded against duplicates because
+      // the socket's room-wide update may have already refreshed this row.
+      patchConversation(queryClient, Number(roomId), (row) => {
+        const existing = row.participants ?? []
+        const known = new Set(existing.map((person) => person.user_id))
+        return {
+          participants: [
+            ...existing,
+            ...(data.added ?? []).filter((person) => !known.has(person.user_id)),
+          ],
+        }
+      })
     },
   })
 }

@@ -186,10 +186,33 @@ export default function AppShell() {
   )
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-background">
-      <ConnectionBanner status={socketStatus} />
+    // relative, and the decoration below is its first child: the texture is the
+    // ground the whole app sits on, not a chat-pane detail. It used to live inside
+    // <main>, which stopped it dead at the sidebar's edge and left the rail and the
+    // conversation list on flat panels beside it. Everything after it is lifted to
+    // z-10 so it stays behind, and the glass panels let it read through.
+    <div className="app-viewport relative flex flex-col overflow-hidden bg-background">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* Colour first, so the grid is lit by it rather than sitting on top. */}
+        <div
+          className="absolute -left-32 -top-40 h-[38rem] w-[38rem] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(closest-side, var(--chat-glow-1), transparent)' }}
+        />
+        <div
+          className="absolute -right-40 -bottom-32 h-[36rem] w-[36rem] rounded-full blur-3xl"
+          style={{ background: 'radial-gradient(closest-side, var(--chat-glow-2), transparent)' }}
+        />
+        <div className="chat-doodles absolute inset-0" />
+        {/* Blurred on purpose — the boxes should read as structure, never as hard
+            rules competing with the message bubbles. */}
+        <div className="chat-grid absolute -inset-4 blur-[3px]" />
+      </div>
 
-      <div className="flex min-h-0 flex-1">
+      <div className="relative z-10">
+        <ConnectionBanner status={socketStatus} />
+      </div>
+
+      <div className="relative z-10 flex min-h-0 flex-1">
         {/* Icon rail */}
         <nav
           aria-label="Main"
@@ -250,7 +273,7 @@ export default function AppShell() {
         {showSidebar && (
           <aside
             className={cn(
-              'relative z-20 flex min-h-0 flex-col',
+              'relative z-20 flex h-full min-h-0 flex-col',
               // Floating only on desktop. On mobile this panel *is* the screen,
               // where insetting it would just waste width.
               isDesktop
@@ -304,76 +327,68 @@ export default function AppShell() {
               )}
             </div>
 
-            {/* Mobile bottom navigation */}
-            <nav
-              aria-label="Sections"
-              className="flex items-center justify-around border-t border-border py-1.5 sm:hidden"
-            >
-              {navItems.map((item) => (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={item.onClick}
-                  className={cn(
-                    'relative flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] font-medium transition-colors',
-                    panel === item.key ? 'text-primary' : 'text-muted-foreground',
-                  )}
-                >
-                  <item.icon className="icon-lg" />
-                  {item.label}
-                  {item.badge > 0 && (
-                    <span className="absolute right-1/4 top-0">
-                      <Badge variant="primary">{item.badge > 9 ? '9+' : item.badge}</Badge>
-                    </span>
-                  )}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => navigate('/app/settings')}
-                className={cn(
-                  'flex flex-1 flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] font-medium text-muted-foreground transition-colors',
-                )}
-              >
-                <Settings className="icon-lg" />
-                Settings
-              </button>
-            </nav>
+            {/* Reserves the tab row's space in the column, because the row itself is
+                taken out of flow below. Same height expression, so the last
+                conversation clears the bar instead of hiding behind it. */}
+            <div className="box-content h-14 shrink-0 pb-safe sm:hidden" aria-hidden />
           </aside>
         )}
 
-        {/* Main pane. The landing page's line grid — softened, tinted with the primary
-            hue and lit from two corners — over a tiling doodle wallpaper, so the
-            conversation sits on the product's texture rather than a flat panel. It
-            runs the full height of the pane: the chat header and the composer are both
-            transparent, so the texture carries through them rather than stopping at
-            the conversation and leaving those two strips looking flat. */}
+        {/* Main pane. Transparent on purpose: the shell's texture runs underneath
+            it, and the chat header and composer are transparent too, so the ground
+            carries through the whole pane instead of stopping at the conversation
+            and leaving those two strips looking flat. */}
         {showMain && (
-          <main className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-background">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 overflow-hidden"
-            >
-              {/* Colour first, so the grid is lit by it rather than sitting on top. */}
-              <div
-                className="absolute -left-32 -top-40 h-[38rem] w-[38rem] rounded-full blur-3xl"
-                style={{ background: 'radial-gradient(closest-side, var(--chat-glow-1), transparent)' }}
-              />
-              <div
-                className="absolute -right-40 -bottom-32 h-[36rem] w-[36rem] rounded-full blur-3xl"
-                style={{ background: 'radial-gradient(closest-side, var(--chat-glow-2), transparent)' }}
-              />
-              <div className="chat-doodles absolute inset-0" />
-              {/* Blurred on purpose — the boxes should read as structure, never as
-                  hard rules competing with the message bubbles. */}
-              <div className="chat-grid absolute -inset-4 blur-[3px]" />
-            </div>
-            <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
-              <Outlet context={{ onViewProfile: setProfileUserId, openConversation }} />
-            </div>
+          <main className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+            <Outlet context={{ onViewProfile: setProfileUserId, openConversation }} />
           </main>
         )}
       </div>
+
+      {/* Mobile bottom navigation.
+
+          Fixed to the viewport, not placed in the sidebar's column: nothing in the
+          layout can move it, and it cannot be scrolled, compressed or pushed off by
+          a long conversation list. It stays a child of the shell so that no ancestor
+          with a `transform` or `backdrop-filter` retargets the fixed positioning to
+          itself. `pb-safe` keeps the labels clear of the iOS home indicator. */}
+      {showSidebar && (
+        <nav
+          aria-label="Sections"
+          className="glass-crystal-panel fixed inset-x-0 bottom-0 z-40 border-t border-border pb-safe sm:hidden"
+        >
+          <div className="flex h-14 items-stretch justify-around">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                onClick={item.onClick}
+                aria-current={panel === item.key ? 'page' : undefined}
+                className={cn(
+                  'relative flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium leading-none transition-colors',
+                  panel === item.key ? 'text-primary' : 'text-muted-foreground',
+                )}
+              >
+                <item.icon className="icon-lg" />
+                {item.label}
+                {item.badge > 0 && (
+                  <span className="absolute right-1/4 top-1">
+                    <Badge variant="primary">{item.badge > 9 ? '9+' : item.badge}</Badge>
+                  </span>
+                )}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => navigate('/app/settings')}
+              className="flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium leading-none text-muted-foreground transition-colors"
+            >
+              <Settings className="icon-lg" />
+              Settings
+            </button>
+          </div>
+        </nav>
+      )}
 
       <ProfileModal
         userId={profileUserId}

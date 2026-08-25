@@ -8,6 +8,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import { flushSync } from 'react-dom'
 
 import config from '../config'
 
@@ -95,8 +96,6 @@ export function useIntersection(onIntersect, { enabled = true, rootMargin = '200
   return ref
 }
 
-/** Matches the transition-duration of the .theme-transition rule in index.css. */
-const THEME_FADE_MS = 180
 
 /**
  * Theme is a single module-level store, not per-hook state.
@@ -116,7 +115,9 @@ const readStoredTheme = () => {
 
 let currentTheme = readStoredTheme()
 const themeListeners = new Set()
-let themeFadeTimer = null
+// A nesting counter, not a boolean: a toggle fired while another is still fading must
+// not lift the previous one's transition suppression early.
+let themeChangeDepth = 0
 
 const applyTheme = (theme) => {
   const root = document.documentElement
@@ -165,15 +166,102 @@ export const restorePublicTheme = () => {
   root.style.backgroundColor = ''
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * How a theme change is painted.
+ *
+ * The switch itself is one class on <html>, so the expensive part was never the
+ * state change — it was how the repaint was staged. Three things used to make it
+ * crawl, and every one of them got worse the more of the app was on screen, which is
+ * why it felt fine on the auth screens and laggy on a full conversation:
+ *
+ *  1. A `html.theme-transition *` rule started a CSS transition on *every element in
+ *     the document*. Each one animated its own colours on its own clock, so the page
+ *     did not change theme — it was filled in, panel by panel, in whatever order the
+ *     browser got to them. That is the "fill spreading from individual views".
+ *  2. Every frame of those transitions repainted the glass chrome, and each repaint
+ *     re-ran its `backdrop-filter` blur — the most expensive thing on the page, and
+ *     it was being recomputed for the whole duration of the switch, per panel.
+ *  3. `useScopedTheme()` (see below) re-rendered the entire authenticated tree.
+ *
+ * What replaces it: one view transition. The browser snapshots the viewport, the
+ * theme flips in a single style pass with no element-level animation at all, and the
+ * two snapshots cross-fade on the compositor. Nothing repaints during the fade, no
+ * blur is recomputed, and because it is one full-viewport image there is no order for
+ * anything to be filled in — every breakpoint gets the identical crossfade.
+ */
+const runThemeChange = (next) => {
+  if (next === currentTheme) return
+
+  const root = document.documentElement
+
+  // Element-level transitions are suppressed for the whole flip. Under a view
+  // transition the incoming snapshot is live, so leaving them on would have every
+  // button easing its own colours *inside* the crossfade — two animations over the
+  // same pixels. On the fallback path it is what keeps the switch from staggering.
+  themeChangeDepth += 1
+  root.classList.add('theme-switching')
+
+  const release = () => {
+    themeChangeDepth -= 1
+    if (themeChangeDepth === 0) root.classList.remove('theme-switching')
+  }
+
+  // React's re-render has to land inside the callback, otherwise the toggle glyph is
+  // still the old one when the snapshot is taken and pops a frame after the fade.
+  const commit = () => flushSync(() => setThemeValue(next))
+
+  if (typeof document.startViewTransition !== 'function' || prefersReducedMotion()) {
+    // No crossfade available, or none wanted: swap in a single frame. Instant is
+    // never janky, and with transitions suppressed the whole page lands together
+    // rather than some parts easing while the rest snaps.
+    commit()
+    requestAnimationFrame(() => requestAnimationFrame(release))
+    return
+  }
+
+  const transition = document.startViewTransition(commit)
+  // `.finished` rejects when a second toggle interrupts this one; either way the
+  // suppression has to be lifted, and the depth counter keeps the interrupted and
+  // the interrupting switch from fighting over the class.
+  transition.finished.then(release, release)
+}
+
+/**
+ * Puts the stored theme on <html> on mount. Shared by both hooks below, so the one
+ * that does not subscribe still applies the theme.
+ *
+ * Re-reads storage rather than trusting the value captured at module load, which
+ * would be stale if another tab changed the theme after this bundle was evaluated.
+ */
+function useAppliedTheme() {
+  useEffect(() => {
+    const stored = readStoredTheme()
+    if (stored !== currentTheme) setThemeValue(stored)
+    else applyTheme(stored)
+  }, [])
+}
+
 /**
  * Applies the theme for as long as the calling component is mounted, then clears it.
  *
  * Mounted inside the authenticated area only, so the toggle governs the app and not
  * the public pages: the landing screen pins its own palette, and sign-in should not
  * inherit a dark theme chosen by whoever used this browser last.
+ *
+ * Deliberately does *not* subscribe to the theme store. It used to call `useTheme()`,
+ * and it is mounted at the root of the signed-in area — so every toggle re-rendered
+ * the route guard, and with it AppShell, the conversation list and every message
+ * bubble on screen. None of that markup depends on the theme: the palette is CSS
+ * variables under a class on <html>, and the only component that renders differently
+ * is the toggle's own glyph. Reading the value here bought nothing and cost a full
+ * re-render of the app on every switch, on top of the repaint.
  */
 export function useScopedTheme() {
-  useTheme()
+  useAppliedTheme()
   useEffect(() => restorePublicTheme, [])
 }
 
@@ -185,42 +273,13 @@ export function useTheme() {
     () => 'dark',
   )
 
-  // Reflect the stored value onto <html> on first mount, so a screen with no toggle
-  // still renders in the saved theme. Re-reads storage rather than trusting the
-  // value captured at module load, which would be stale if another tab changed the
-  // theme after this bundle was evaluated.
-  useEffect(() => {
-    const stored = readStoredTheme()
-    if (stored !== currentTheme) setThemeValue(stored)
-    else applyTheme(stored)
-  }, [])
+  useAppliedTheme()
 
-  /**
-   * Cross-fade the whole document for the duration of the switch. The class is added
-   * before the theme flips and removed once the fade completes, so the cost is paid
-   * only while toggling — a permanent global transition rule would tax every hover
-   * and repaint in the app. Skipped when the viewer has asked for reduced motion.
-   */
   const toggle = useCallback(() => {
-    const root = document.documentElement
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      root.classList.add('theme-transition')
-      // Flush style before the colours change. Adding the class and flipping `.dark`
-      // in one tick leaves the browser free to collapse both into a single style
-      // pass, in which case there is no "before" value to interpolate from and the
-      // colours jump instead of fading. Reading a layout property forces the
-      // intermediate state to be committed.
-      void root.offsetWidth
-      if (themeFadeTimer) clearTimeout(themeFadeTimer)
-      themeFadeTimer = setTimeout(() => {
-        root.classList.remove('theme-transition')
-        themeFadeTimer = null
-      }, THEME_FADE_MS)
-    }
-    setThemeValue(currentTheme === 'dark' ? 'light' : 'dark')
+    runThemeChange(currentTheme === 'dark' ? 'light' : 'dark')
   }, [])
 
-  const setTheme = useCallback((next) => setThemeValue(next), [])
+  const setTheme = useCallback((next) => runThemeChange(next), [])
 
   return { theme, setTheme, toggle, isDark: theme === 'dark' }
 }

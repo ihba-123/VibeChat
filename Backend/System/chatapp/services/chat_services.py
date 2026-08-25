@@ -11,8 +11,13 @@ from . import blocking
 MAX_GROUP_PARTICIPANTS = 200
 
 
-def _clean_participant_ids(raw, user):
-    """Validate the requested participants and return them as a de-duplicated list."""
+def clean_participant_ids(raw, user):
+    """Validate the requested participants and return them as a de-duplicated list.
+
+    Shared with ``group_services``: adding people to an existing group has to
+    accept exactly what creating one does, and a second copy of these rules would
+    be a second place for them to drift.
+    """
     if raw is None:
         raise ValidationError({"participant_ids": "This field is required."})
     if isinstance(raw, (str, int)):
@@ -51,7 +56,7 @@ def create_chat_room(user, participant_ids, name, is_group=False):
     rejected: the caller's intent is "open a conversation with this person", and
     the previous 400 response left the client with no room id to navigate to.
     """
-    ids = _clean_participant_ids(participant_ids, user)
+    ids = clean_participant_ids(participant_ids, user)
     blocked = blocking.blocked_ids_for(user)
 
     if not is_group:

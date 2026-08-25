@@ -4,6 +4,7 @@ import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 
 import ChatHeader, { HEADER_INSET } from '../components/chat/ChatHeader'
 import { useConfirm } from '../components/ConfirmDialog'
+import GroupInfoModal from '../components/chat/GroupInfoModal'
 import ImageLightbox from '../components/chat/ImageLightbox'
 import MessageComposer from '../components/chat/MessageComposer'
 import MessageList from '../components/chat/MessageList'
@@ -51,6 +52,9 @@ export default function ChatRoom() {
   const removeFriend = useRemoveFriend()
 
   const [lightboxSrc, setLightboxSrc] = useState(null)
+  // null when closed; `{ rename }` when open, so the "Rename group" menu entry
+  // and the plain "Group info" entry can share one dialog.
+  const [groupInfo, setGroupInfo] = useState(null)
 
   const otherUserId = conversation?.other_user_id ?? null
   const isBlocked = useMemo(
@@ -80,6 +84,13 @@ export default function ChatRoom() {
   }, [markVisible])
 
   const typingNames = typingIn(Number(roomId))
+
+  // Called both from the menu (with options) and from the header title button
+  // (which passes a click event), hence the explicit `=== true`.
+  const openGroupInfo = useCallback(
+    (options) => setGroupInfo({ rename: options?.rename === true }),
+    [],
+  )
 
   const handleUpload = useCallback(
     (payload) => upload.mutateAsync(payload),
@@ -162,6 +173,7 @@ export default function ChatRoom() {
             tone: 'default',
           })
         }
+        onGroupInfo={openGroupInfo}
         onRemoveFriend={() =>
           act(
             () => removeFriend.mutateAsync(otherUserId),
@@ -227,6 +239,14 @@ export default function ChatRoom() {
       />
 
       <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+
+      <GroupInfoModal
+        open={Boolean(groupInfo)}
+        onClose={() => setGroupInfo(null)}
+        conversation={conversation}
+        currentUserId={currentUserId}
+        startEditingName={Boolean(groupInfo?.rename)}
+      />
     </div>
   )
 }

@@ -33,6 +33,8 @@ EVENT_MESSAGE_READ = "chat.read"
 EVENT_TYPING = "chat.typing"
 EVENT_PRESENCE = "presence.update"
 EVENT_CONVERSATION_NEW = "conversation.new"
+EVENT_CONVERSATION_UPDATE = "conversation.update"
+EVENT_CONVERSATION_REMOVED = "conversation.removed"
 EVENT_FRIEND_REQUEST = "friend.request"
 EVENT_FRIEND_UPDATE = "friend.update"
 EVENT_BLOCK = "block.event"
@@ -116,6 +118,16 @@ def conversation_event(room_id) -> dict:
     return {"type": EVENT_CONVERSATION_NEW, "room_id": int(room_id)}
 
 
+def conversation_update_event(room_id, name=None) -> dict:
+    """A group's name or membership changed."""
+    return {"type": EVENT_CONVERSATION_UPDATE, "room_id": int(room_id), "name": name}
+
+
+def conversation_removed_event(room_id) -> dict:
+    """The recipient is no longer a member of this conversation."""
+    return {"type": EVENT_CONVERSATION_REMOVED, "room_id": int(room_id)}
+
+
 def friend_request_event(request_id, from_user) -> dict:
     return {
         "type": EVENT_FRIEND_REQUEST,
@@ -164,6 +176,21 @@ def broadcast_presence(target_user_ids, user_id, is_online: bool) -> None:
 def notify_conversation_created(user_ids, room_id) -> None:
     """Tell each member to pull the new conversation and join its group."""
     publish_many((user_group(u) for u in user_ids), conversation_event(room_id))
+
+
+def notify_conversation_updated(room_id, name=None) -> None:
+    """Tell everyone still in the room to re-read it."""
+    publish(room_group(room_id), conversation_update_event(room_id, name))
+
+
+def notify_conversation_removed(user_id, room_id) -> None:
+    """Tell one person their membership ended, so their client can close it.
+
+    Addressed to the user group rather than the room: by the time this is sent
+    they are no longer a participant, and every other member has already had the
+    room-wide update.
+    """
+    publish(user_group(user_id), conversation_removed_event(room_id))
 
 
 def notify_friend_request(target_user_id, request_id, from_user) -> None:
